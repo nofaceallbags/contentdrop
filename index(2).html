@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ContentDrop — AI Content Workspace</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8142A;--red2:#b80e1f;--red3:#ff3347;
+  --black:#080808;--black2:#111113;--black3:#1a1a1c;--black4:#242428;
+  --white:#FAFAFA;--white2:#D0D0D8;--white3:#7A7A88;
+  --gold:#D4AF37;
+  --font:'DM Sans',system-ui,sans-serif;
+  --mono:'DM Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--black);color:var(--white);font-family:var(--font);-webkit-font-smoothing:antialiased}
+button,input,textarea{font-family:var(--font)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--black4);border-radius:4px}
+
+/* ═══════════════════════════════════════════
+   PAGE SYSTEM
+═══════════════════════════════════════════ */
+#home,#workspace{
+  position:fixed;inset:0;
+  transition:transform 0.7s cubic-bezier(0.76,0,0.24,1),opacity 0.7s ease;
+}
+#home{z-index:10;transform:translateY(0);opacity:1}
+#workspace{z-index:5;transform:translateY(100vh);opacity:0}
+#home.exit{transform:translateY(-100vh);opacity:0;pointer-events:none}
+#workspace.enter{transform:translateY(0);opacity:1;z-index:20}
+
+/* ═══════════════════════════════════════════
+   HOME PAGE
+═══════════════════════════════════════════ */
+#home{background:var(--black);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+
+/* canvas bg */
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* noise overlay */
+#home::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");opacity:.4;pointer-events:none;z-index:1}
+
+/* glow orbs */
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:1;animation:orbFloat 8s ease-in-out infinite}
+.orb1{width:500px;height:500px;background:radial-gradient(circle,rgba(232,20,42,0.18),transparent 70%);top:-100px;right:-100px;animation-delay:0s}
+.orb2{width:400px;height:400px;background:radial-gradient(circle,rgba(232,20,42,0.10),transparent 70%);bottom:-50px;left:-100px;animation-delay:-3s}
+.orb3{width:300px;height:300px;background:radial-gradient(circle,rgba(212,175,55,0.08),transparent 70%);top:40%;left:40%;animation-delay:-5s}
+@keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.05)}}
+
+/* nav */
+#nav{
+  position:relative;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 48px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  backdrop-filter:blur(20px);
+  background:rgba(8,8,8,0.6);
+  position:sticky;top:0;
+}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo-mark{
+  width:34px;height:34px;border-radius:9px;
+  background:var(--red);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:#fff;letter-spacing:-1px;
+}
+.nav-logo-text{font-size:16px;font-weight:600;color:var(--white);letter-spacing:-.3px}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-link{background:transparent;border:none;color:var(--white3);font-size:13px;cursor:pointer;padding:6px 12px;border-radius:6px;transition:color .2s}
+.nav-link:hover{color:var(--white)}
+.nav-cta{
+  background:var(--red);border:none;color:#fff;
+  font-size:13px;font-weight:500;padding:8px 20px;border-radius:8px;
+  cursor:pointer;transition:all .2s;
+}
+.nav-cta:hover{background:var(--red3);transform:translateY(-1px);box-shadow:0 4px 20px rgba(232,20,42,0.4)}
+
+/* hero */
+#hero{
+  position:relative;z-index:5;
+  min-height:calc(100vh - 73px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:80px 24px 60px;
+}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(232,20,42,0.1);border:1px solid rgba(232,20,42,0.25);
+  color:var(--red3);font-size:12px;font-weight:500;font-family:var(--mono);
+  padding:6px 14px;border-radius:20px;margin-bottom:28px;
+  animation:fadeSlideUp .6s ease both;
+  letter-spacing:.3px;
+}
+.hero-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+.hero-h1{
+  font-size:clamp(48px,7vw,88px);font-weight:700;line-height:1.05;letter-spacing:-3px;
+  color:var(--white);margin-bottom:12px;
+  animation:fadeSlideUp .6s .1s ease both;
+}
+.hero-h1 span{color:var(--red);position:relative}
+.hero-h1 span::after{
+  content:'';position:absolute;bottom:-4px;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--red),transparent);border-radius:2px;
+}
+.hero-sub{
+  font-size:clamp(16px,2vw,22px);color:var(--white3);font-weight:300;
+  max-width:560px;line-height:1.6;margin:0 auto 20px;
+  animation:fadeSlideUp .6s .2s ease both;
+}
+.hero-typewriter{
+  font-size:18px;color:var(--white2);font-family:var(--mono);
+  min-height:28px;margin-bottom:40px;
+  animation:fadeSlideUp .6s .3s ease both;
+}
+.cursor{display:inline-block;width:2px;height:18px;background:var(--red);margin-left:2px;animation:blink .8s step-end infinite;vertical-align:middle}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;animation:fadeSlideUp .6s .4s ease both}
+.btn-hero{
+  background:var(--red);border:none;color:#fff;
+  font-size:15px;font-weight:600;padding:14px 32px;border-radius:10px;
+  cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:8px;
+}
+.btn-hero:hover{background:var(--red3);transform:translateY(-2px);box-shadow:0 8px 32px rgba(232,20,42,0.45)}
+.btn-hero-ghost{
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
+  color:var(--white2);font-size:15px;font-weight:500;padding:14px 28px;border-radius:10px;cursor:pointer;transition:all .25s;
+}
+.btn-hero-ghost:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2)}
+
+.hero-stats{
+  display:flex;gap:40px;justify-content:center;margin-top:60px;
+  animation:fadeSlideUp .6s .5s ease both;flex-wrap:wrap;
+}
+.stat{text-align:center}
+.stat-num{font-size:28px;font-weight:700;color:var(--white);letter-spacing:-1px}
+.stat-num span{color:var(--red)}
+.stat-label{font-size:12px;color:var(--white3);font-family:var(--mono);margin-top:2px}
+
+/* floating cards preview */
+.preview-wrap{
+  position:relative;z-index:5;padding:0 24px 80px;
+  display:flex;justify-content:center;
+  animation:fadeSlideUp .6s .3s ease both;
+}
+.preview-inner{position:relative;width:100%;max-width:900px;height:340px}
+.preview-card{
+  position:absolute;background:var(--black2);border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  transition:transform .3s ease;
+}
+.preview-card:hover{transform:translateY(-4px)!important}
+.pc-strip{height:3px;border-radius:10px;margin-bottom:12px}
+.pc-tag{font-size:9px;font-weight:600;font-family:var(--mono);letter-spacing:1px;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:8px}
+.pc-title{font-size:12px;font-weight:600;color:var(--white);margin-bottom:6px}
+.pc-body{font-size:11px;color:var(--white3);line-height:1.6;font-family:var(--mono)}
+.pc1{width:230px;top:20px;left:0;transform:rotate(-3deg);animation:float1 6s ease-in-out infinite}
+.pc2{width:260px;top:0;left:50%;transform:translateX(-50%) rotate(1deg);animation:float2 7s ease-in-out infinite}
+.pc3{width:230px;top:30px;right:0;transform:rotate(3deg);animation:float3 5s ease-in-out infinite}
+.pc4{width:200px;bottom:20px;left:15%;transform:rotate(-1.5deg);animation:float4 6.5s ease-in-out infinite}
+.pc5{width:220px;bottom:10px;right:12%;transform:rotate(2deg);animation:float5 7.5s ease-in-out infinite}
+@keyframes float1{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(-3deg) translateY(-12px)}}
+@keyframes float2{0%,100%{transform:translateX(-50%) rotate(1deg) translateY(0)}50%{transform:translateX(-50%) rotate(1deg) translateY(-16px)}}
+@keyframes float3{0%,100%{transform:rotate(3deg) translateY(0)}50%{transform:rotate(3deg) translateY(-10px)}}
+@keyframes float4{0%,100%{transform:rotate(-1.5deg) translateY(0)}50%{transform:rotate(-1.5deg) translateY(-14px)}}
+@keyframes float5{0%,100%{transform:rotate(2deg) translateY(0)}50%{transform:rotate(2deg) translateY(-8px)}}
+
+/* features */
+#features{position:relative;z-index:5;padding:80px 48px;border-top:1px solid rgba(255,255,255,0.06)}
+.section-label{font-size:11px;font-weight:600;font-family:var(--mono);letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:14px;text-align:center}
+.section-title{font-size:clamp(28px,4vw,44px);font-weight:700;letter-spacing:-1.5px;text-align:center;color:var(--white);margin-bottom:14px;line-height:1.1}
+.section-sub{font-size:16px;color:var(--white3);text-align:center;max-width:480px;margin:0 auto 56px;line-height:1.6}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;max-width:1000px;margin:0 auto}
+.feature-card{
+  background:var(--black2);border:1px solid rgba(255,255,255,0.07);
+  border-radius:14px;padding:24px;
+  transition:all .25s;position:relative;overflow:hidden;
+}
+.feature-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(232,20,42,0.04),transparent);opacity:0;transition:opacity .3s}
+.feature-card:hover{border-color:rgba(232,20,42,0.25);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,0.4)}
+.feature-card:hover::before{opacity:1}
+.feature-icon{font-size:24px;margin-bottom:14px}
+.feature-title{font-size:15px;font-weight:600;color:var(--white);margin-bottom:6px}
+.feature-desc{font-size:13px;color:var(--white3);line-height:1.6}
+
+/* output types marquee */
+#marquee-wrap{position:relative;z-index:5;padding:60px 0;border-top:1px solid rgba(255,255,255,0.06);overflow:hidden}
+.marquee-track{display:flex;gap:12px;animation:marquee 30s linear infinite;width:max-content}
+.marquee-track2{display:flex;gap:12px;animation:marquee 25s linear infinite reverse;width:max-content;margin-top:12px}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.marquee-pill{
+  display:flex;align-items:center;gap:8px;
+  background:var(--black2);border:1px solid rgba(255,255,255,0.07);
+  border-radius:30px;padding:8px 16px;white-space:nowrap;flex-shrink:0;
+}
+.marquee-pill span:first-child{font-size:14px}
+.marquee-pill span:last-child{font-size:12px;color:var(--white2);font-weight:500}
+#marquee-wrap::before,#marquee-wrap::after{content:'';position:absolute;top:0;bottom:0;width:120px;z-index:2;pointer-events:none}
+#marquee-wrap::before{left:0;background:linear-gradient(90deg,var(--black),transparent)}
+#marquee-wrap::after{right:0;background:linear-gradient(-90deg,var(--black),transparent)}
+
+/* how it works */
+#how{position:relative;z-index:5;padding:80px 48px;border-top:1px solid rgba(255,255,255,0.06)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:32px;max-width:900px;margin:0 auto;position:relative}
+.steps::before{content:'';position:absolute;top:32px;left:calc(100%/6);right:calc(100%/6);height:1px;background:linear-gradient(90deg,transparent,rgba(232,20,42,0.3),transparent);pointer-events:none}
+.step{text-align:center;padding:32px 24px}
+.step-num{
+  width:56px;height:56px;border-radius:50%;
+  background:rgba(232,20,42,0.12);border:1px solid rgba(232,20,42,0.3);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 20px;
+  font-size:20px;font-weight:700;color:var(--red);
+}
+.step-title{font-size:16px;font-weight:600;color:var(--white);margin-bottom:8px}
+.step-desc{font-size:13px;color:var(--white3);line-height:1.7}
+
+/* bottom cta */
+#cta-section{
+  position:relative;z-index:5;padding:100px 48px;
+  border-top:1px solid rgba(255,255,255,0.06);
+  text-align:center;
+}
+.cta-inner{
+  max-width:640px;margin:0 auto;
+  background:linear-gradient(135deg,rgba(232,20,42,0.08),rgba(212,175,55,0.04));
+  border:1px solid rgba(232,20,42,0.18);border-radius:24px;padding:64px 48px;
+  position:relative;overflow:hidden;
+}
+.cta-inner::before{content:'';position:absolute;top:-80px;right:-80px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(232,20,42,0.15),transparent 70%)}
+.cta-h2{font-size:clamp(28px,4vw,44px);font-weight:700;letter-spacing:-1.5px;color:var(--white);margin-bottom:14px;line-height:1.1}
+.cta-sub{font-size:16px;color:var(--white3);margin-bottom:32px;line-height:1.6}
+.price-badge{
+  display:inline-flex;align-items:baseline;gap:4px;margin-bottom:28px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  border-radius:30px;padding:8px 20px;
+}
+.price-big{font-size:36px;font-weight:700;color:var(--white);letter-spacing:-1px}
+.price-note{font-size:13px;color:var(--white3)}
+.cta-features{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
+.cta-feat{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--white3)}
+.cta-feat::before{content:'✓';color:var(--red);font-weight:700}
+
+/* footer */
+#footer{
+  position:relative;z-index:5;padding:24px 48px;
+  border-top:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.footer-logo{font-size:13px;font-weight:600;color:var(--white3)}
+.footer-note{font-size:12px;color:var(--white3);font-family:var(--mono)}
+
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════════════════════════════════════
+   WORKSPACE
+═══════════════════════════════════════════ */
+#workspace{background:var(--black);display:flex;flex-direction:column;overflow:hidden}
+
+/* ── LOGIN OVERLAY ── */
+#login-overlay{
+  position:fixed;inset:0;z-index:999;
+  background:var(--black);
+  display:none;
+  align-items:center;justify-content:center;
+  overflow:hidden;
+  transition:opacity .6s ease,transform .6s cubic-bezier(0.76,0,0.24,1);
+}
+#login-overlay.hide{opacity:0;pointer-events:none;transform:scale(1.04)}
+
+/* animated bg grid */
+.login-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(232,20,42,0.06) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(232,20,42,0.06) 1px,transparent 1px);
+  background-size:48px 48px;
+  animation:gridShift 20s linear infinite;
+}
+@keyframes gridShift{from{background-position:0 0}to{background-position:48px 48px}}
+
+/* glow orbs */
+.l-orb{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;animation:lOrbFloat 10s ease-in-out infinite}
+.l-orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(232,20,42,0.22),transparent 65%);top:-200px;right:-200px;animation-delay:0s}
+.l-orb2{width:500px;height:500px;background:radial-gradient(circle,rgba(232,20,42,0.14),transparent 65%);bottom:-150px;left:-200px;animation-delay:-4s}
+.l-orb3{width:300px;height:300px;background:radial-gradient(circle,rgba(255,255,255,0.03),transparent 65%);top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:-7s}
+@keyframes lOrbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-24px) scale(1.04)}}
+
+/* floating pills bg decoration */
+.login-pills{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.l-pill{
+  position:absolute;background:rgba(232,20,42,0.08);border:1px solid rgba(232,20,42,0.15);
+  border-radius:30px;padding:6px 14px;font-size:11px;font-family:var(--mono);
+  color:rgba(255,255,255,0.2);white-space:nowrap;
+  animation:pillFloat var(--d,12s) ease-in-out infinite;
+  animation-delay:var(--delay,0s);
+}
+@keyframes pillFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+
+/* login card */
+.login-card{
+  position:relative;z-index:2;
+  width:100%;max-width:460px;
+  padding:0 24px;
+  animation:loginCardIn .8s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes loginCardIn{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}
+
+/* logo */
+.l-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:40px}
+.l-logo-mark{
+  width:52px;height:52px;border-radius:14px;background:var(--red);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:800;color:#fff;letter-spacing:-1.5px;
+  box-shadow:0 0 40px rgba(232,20,42,0.5),0 8px 24px rgba(232,20,42,0.3);
+  animation:logoPulse 3s ease-in-out infinite;
+}
+@keyframes logoPulse{0%,100%{box-shadow:0 0 40px rgba(232,20,42,0.5),0 8px 24px rgba(232,20,42,0.3)}50%{box-shadow:0 0 60px rgba(232,20,42,0.7),0 12px 32px rgba(232,20,42,0.4)}}
+.l-logo-text{text-align:left}
+.l-logo-name{font-size:26px;font-weight:700;color:var(--white);letter-spacing:-1px;line-height:1}
+.l-logo-sub{font-size:12px;color:var(--white3);font-family:var(--mono);letter-spacing:.5px;margin-top:3px}
+
+/* heading */
+.l-heading{
+  text-align:center;margin-bottom:32px;
+  animation:loginCardIn .8s .1s cubic-bezier(0.22,1,0.36,1) both;
+}
+.l-h1{font-size:32px;font-weight:700;color:var(--white);letter-spacing:-1px;line-height:1.2;margin-bottom:8px}
+.l-h1 em{color:var(--red);font-style:normal}
+.l-p{font-size:14px;color:var(--white3);line-height:1.6}
+
+/* input group */
+.l-form{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:16px;padding:24px;
+  animation:loginCardIn .8s .2s cubic-bezier(0.22,1,0.36,1) both;
+}
+.l-label{font-size:11px;font-weight:600;font-family:var(--mono);letter-spacing:1.5px;color:var(--white3);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.l-label::before{content:'';display:block;width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 2s ease infinite}
+.l-input-wrap{position:relative;margin-bottom:16px}
+.l-input{
+  width:100%;background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);border-radius:10px;
+  color:var(--white);font-size:14px;font-family:var(--mono);
+  padding:14px 16px;outline:none;
+  transition:all .25s;letter-spacing:.5px;
+}
+.l-input:focus{border-color:var(--red);background:rgba(232,20,42,0.06);box-shadow:0 0 0 3px rgba(232,20,42,0.12)}
+.l-input::placeholder{color:rgba(255,255,255,0.2);font-size:12px;letter-spacing:0}
+.l-activate{
+  width:100%;background:var(--red);border:none;color:#fff;
+  font-size:15px;font-weight:600;padding:14px;border-radius:10px;
+  cursor:pointer;transition:all .25s;letter-spacing:-.2px;
+  position:relative;overflow:hidden;
+}
+.l-activate::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);
+  transform:translateX(-100%);transition:transform .5s;
+}
+.l-activate:hover{background:var(--red3);transform:translateY(-1px);box-shadow:0 8px 28px rgba(232,20,42,0.45)}
+.l-activate:hover::before{transform:translateX(100%)}
+.l-activate:active{transform:translateY(0)}
+
+/* hint */
+.l-hint{
+  text-align:center;margin-top:20px;font-size:12px;color:var(--white3);line-height:1.6;
+  animation:loginCardIn .8s .3s cubic-bezier(0.22,1,0.36,1) both;
+}
+.l-hint a{color:var(--red);text-decoration:none;font-weight:500}
+.l-hint a:hover{text-decoration:underline}
+
+/* status dots bottom */
+.l-dots{display:flex;justify-content:center;gap:8px;margin-top:32px;animation:loginCardIn .8s .4s cubic-bezier(0.22,1,0.36,1) both}
+.l-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.15);animation:dotBounce 1.4s ease-in-out infinite}
+.l-dot:nth-child(2){animation-delay:.2s}
+.l-dot:nth-child(3){animation-delay:.4s}
+@keyframes dotBounce{0%,100%{transform:translateY(0);background:rgba(255,255,255,0.15)}50%{transform:translateY(-6px);background:var(--red)}}
+
+/* api-banner hidden now */
+#api-banner{display:none}
+
+/* workspace topbar */
+#ws-topbar{
+  height:50px;background:var(--black2);border-bottom:1px solid rgba(255,255,255,0.07);
+  display:flex;align-items:center;padding:0 16px;gap:8px;z-index:30;flex-shrink:0;
+}
+.ws-logo{display:flex;align-items:center;gap:8px;margin-right:8px;flex-shrink:0}
+.ws-logo-mark{width:26px;height:26px;border-radius:7px;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.ws-logo-name{font-size:13px;font-weight:600;color:var(--white);letter-spacing:-.3px}
+.ws-divider{width:1px;height:20px;background:rgba(255,255,255,0.08);flex-shrink:0;margin:0 4px}
+.ws-chip{
+  display:flex;align-items:center;gap:5px;background:transparent;
+  border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);
+  font-size:11px;font-weight:500;padding:4px 9px;border-radius:6px;
+  cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;
+}
+.ws-chip:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.2);color:var(--white)}
+.chip-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.ws-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.ws-status{font-size:10px;color:rgba(255,255,255,0.25);font-family:var(--mono);padding:4px 10px;background:rgba(255,255,255,0.04);border-radius:20px;white-space:nowrap}
+.ws-icon-btn{
+  background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);
+  font-size:13px;height:30px;padding:0 10px;border-radius:6px;
+  cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;flex-shrink:0;font-size:11px;
+}
+.ws-icon-btn:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.2);color:var(--white)}
+.saved-badge{background:var(--red);color:#fff;font-size:9px;font-weight:600;border-radius:10px;padding:1px 5px;display:none}
+.back-btn{
+  background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);
+  font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:all .15s;flex-shrink:0;
+}
+.back-btn:hover{background:rgba(255,255,255,0.06);color:var(--white)}
+
+/* theme toggle */
+.theme-toggle{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:3px;display:flex;gap:2px;cursor:pointer}
+.tt-opt{padding:2px 8px;border-radius:16px;font-size:11px;transition:all .15s;color:rgba(255,255,255,0.35)}
+.tt-opt.active{background:rgba(255,255,255,0.1);color:var(--white)}
+[data-ws-theme="light"] #workspace{background:#F5F4F0}
+[data-ws-theme="light"] #ws-topbar{background:#fff;border-color:#E8E6E0}
+[data-ws-theme="light"] .ws-chip,.ws-icon-btn,.back-btn{color:#555;border-color:#ddd}
+[data-ws-theme="light"] #canvas{background:#F0EEE8;background-image:radial-gradient(circle,#CCC 1px,transparent 1px)}
+[data-ws-theme="light"] .card{background:#fff;border-color:#E8E6DF;box-shadow:0 2px 12px rgba(0,0,0,0.08)}
+[data-ws-theme="light"] .card-ttl{color:#4a4a52}
+[data-ws-theme="light"] .card-body{color:#6B6B72}
+[data-ws-theme="light"] .card-body.empty{color:#aaaaaf}
+[data-ws-theme="light"] .card-tag{opacity:.85}
+[data-ws-theme="light"] .card-act{color:#999}
+[data-ws-theme="light"] .card-del{color:#bbb}
+[data-ws-theme="light"] #panel{background:#F8F7F3;border-color:#E0DDD6}
+[data-ws-theme="light"] #panel .p-heading{color:#888}
+[data-ws-theme="light"] #panel .p-hint{color:#aaa}
+[data-ws-theme="light"] .gen-btn.on{color:#555;border-color:#E0DDD6}
+[data-ws-theme="light"] .gen-btn.on:hover{background:#F0EEE8;border-color:#ccc;color:#222}
+[data-ws-theme="light"] .gen-group-lbl{color:#bbb}
+[data-ws-theme="light"] #drawer{background:#fff;border-color:#E0DDD6}
+[data-ws-theme="light"] #drawer .d-body{color:#4a4a52}
+[data-ws-theme="light"] #drawer .d-label{color:#333}
+[data-ws-theme="light"] .gen-div{background:#E8E6E0}
+
+/* main workspace */
+#ws-main{flex:1;display:flex;overflow:hidden}
+#canvas{
+  flex:1;position:relative;overflow:hidden;
+  background:var(--black);
+  background-image:radial-gradient(circle,rgba(255,255,255,0.06) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+#board{position:absolute;inset:0;transform-origin:0 0}
+
+/* cards */
+.card{
+  position:absolute;background:var(--black2);border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.5);
+  transition:border-color .15s,box-shadow .15s;user-select:none;-webkit-user-select:none;min-width:200px;
+  cursor:grab;-webkit-user-drag:none;z-index:2;
+}
+.card:active{cursor:grabbing;}
+.card:hover{box-shadow:0 4px 24px rgba(0,0,0,0.6)}
+.card.selected{box-shadow:0 0 0 2px var(--sel-col,var(--red)),0 4px 24px rgba(0,0,0,0.5)!important}
+.card-strip{height:3px;border-radius:12px 12px 0 0}
+.card-hdr{padding:9px 12px 7px;display:flex;align-items:center;gap:7px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.card-tag{font-size:9px;font-weight:600;font-family:var(--mono);letter-spacing:.8px;padding:2px 6px;border-radius:4px}
+.card-acts{margin-left:auto;display:flex;gap:3px}
+.card-act{background:transparent;border:none;color:rgba(255,255,255,0.25);font-size:11px;font-family:var(--mono);cursor:pointer;padding:2px 6px;border-radius:4px;transition:all .15s}
+.card-act:hover{background:rgba(255,255,255,0.08);color:var(--white)}
+.card-del{background:transparent;border:none;color:rgba(255,255,255,0.2);font-size:15px;line-height:1;cursor:pointer;padding:2px 5px;border-radius:4px;transition:all .15s}
+.card-del:hover{background:rgba(232,20,42,0.15);color:var(--red)}
+.card-ttl-wrap{padding:9px 12px 4px}
+.card-ttl{font-size:12px;font-weight:600;color:var(--white);line-height:1.4;word-break:break-word}
+.card-ttl input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:var(--white);font-size:12px;font-weight:600;padding:4px 7px;font-family:var(--font);outline:none}
+.card-ttl input:focus{border-color:var(--red)}
+.card-body{padding:3px 12px 10px;font-size:11px;color:rgba(255,255,255,0.4);line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:160px;overflow-y:auto;font-family:var(--mono)}
+.card-body.empty{color:rgba(255,255,255,0.2);font-style:italic;font-family:var(--font)}
+.card-body textarea{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:rgba(255,255,255,0.6);font-size:11px;padding:5px 7px;font-family:var(--mono);outline:none;resize:vertical;line-height:1.7;min-height:80px}
+.card-body textarea:focus{border-color:var(--red)}
+.card-resize{position:absolute;bottom:0;right:0;width:16px;height:16px;cursor:nwse-resize;display:flex;align-items:flex-end;justify-content:flex-end;padding:3px;opacity:0;transition:opacity .15s}
+.card:hover .card-resize{opacity:1}
+
+/* panel */
+#panel{width:220px;background:var(--black3);border-left:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;flex-shrink:0;z-index:20}
+.p-top{padding:12px 14px 10px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.p-heading{font-size:9px;font-weight:600;font-family:var(--mono);letter-spacing:1.5px;color:rgba(255,255,255,0.25);margin-bottom:5px;text-transform:uppercase}
+.p-hint{font-size:11px;color:rgba(255,255,255,0.3);line-height:1.5}
+.p-hint.sel{color:rgba(255,255,255,0.6)}
+.p-scroll{flex:1;overflow-y:auto;padding:6px}
+.gen-group-lbl{font-size:9px;font-weight:600;font-family:var(--mono);letter-spacing:1px;color:rgba(255,255,255,0.2);padding:10px 10px 4px;text-transform:uppercase}
+.gen-div{height:1px;background:rgba(255,255,255,0.06);margin:6px 10px}
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:#1a1a1c;border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:13px;font-weight:500;padding:11px 22px;border-radius:30px;z-index:9999;opacity:0;transition:all .3s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.gen-btn{display:flex;align-items:center;gap:7px;width:100%;background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.2);font-size:11px;font-weight:500;padding:6px 9px;border-radius:6px;cursor:not-allowed;margin-bottom:1px;text-align:left;transition:all .12s}
+.gen-btn.on{color:rgba(255,255,255,0.65);cursor:pointer}
+.gen-btn.on:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:var(--white)}
+.gen-btn.running{background:rgba(232,20,42,0.08);border-color:rgba(232,20,42,0.25);color:var(--red);cursor:wait}
+
+/* drawer */
+#drawer{position:fixed;bottom:0;left:0;right:220px;background:var(--black2);border-top:1px solid rgba(255,255,255,0.08);z-index:50;display:none;flex-direction:column;max-height:52vh;box-shadow:0 -8px 40px rgba(0,0,0,0.5)}
+.d-hdr{padding:11px 20px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.d-tag{font-size:10px;font-weight:600;font-family:var(--mono);letter-spacing:.6px;padding:3px 8px;border-radius:4px;background:rgba(34,197,94,0.12);color:#22c55e}
+.d-label{font-size:13px;font-weight:600;color:var(--white)}
+.d-acts{margin-left:auto;display:flex;gap:6px;align-items:center}
+.d-btn{background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:11px;font-weight:500;padding:5px 13px;border-radius:6px;cursor:pointer;transition:all .15s}
+.d-btn:hover{background:rgba(255,255,255,0.06);color:var(--white)}
+.d-btn.saved{background:rgba(232,20,42,0.08);border-color:rgba(232,20,42,0.3);color:var(--red)}
+.d-btn.copied{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.3);color:#22c55e}
+.d-close{background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);font-size:15px;width:28px;height:28px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.d-close:hover{background:rgba(255,255,255,0.06);color:var(--white)}
+.d-body{padding:16px 20px 20px;overflow-y:auto;flex:1;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.85;white-space:pre-wrap;word-break:break-word;font-family:var(--mono)}
+
+/* overlays */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--black2);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:22px;box-shadow:0 32px 80px rgba(0,0,0,0.6);width:400px}
+.m-title{font-size:10px;font-weight:600;font-family:var(--mono);letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.m-title::before{content:'';display:block;width:8px;height:8px;border-radius:50%;background:var(--m-col,var(--red));flex-shrink:0}
+.m-lbl{font-size:12px;font-weight:500;color:rgba(255,255,255,0.5);margin-bottom:6px}
+.m-input{display:block;width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:13px;padding:9px 11px;margin-bottom:11px;font-family:var(--font);outline:none;transition:border-color .15s}
+.m-input:focus{border-color:var(--red)}
+.m-input::placeholder{color:rgba(255,255,255,0.2)}
+.m-ta{display:block;width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.6);font-size:12px;padding:9px 11px;font-family:var(--mono);outline:none;resize:vertical;line-height:1.7;transition:border-color .15s}
+.m-ta:focus{border-color:var(--red)}
+.m-ta::placeholder{color:rgba(255,255,255,0.2)}
+.m-hint{font-size:10px;color:rgba(255,255,255,0.2);font-family:var(--mono);margin:5px 0 13px}
+.m-btns{display:flex;gap:8px}
+.btn-p{flex:1;background:var(--red);border:none;color:#fff;font-size:13px;font-weight:500;padding:10px;border-radius:7px;cursor:pointer;transition:opacity .15s}
+.btn-p:hover{opacity:.88}
+.btn-s{flex:1;background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:13px;font-weight:500;padding:10px;border-radius:7px;cursor:pointer;transition:all .15s}
+.btn-s:hover{background:rgba(255,255,255,0.06);color:var(--white)}
+.dz{border:2px dashed rgba(255,255,255,0.12);border-radius:10px;padding:18px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.03);min-height:76px;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:all .15s;margin-bottom:10px}
+.dz:hover{border-color:var(--red);background:rgba(232,20,42,0.04)}
+.dz-icon{font-size:20px;margin-bottom:5px}
+.dz-txt{font-size:12px;color:rgba(255,255,255,0.4);font-weight:500}
+.dz-sub{font-size:10px;color:rgba(255,255,255,0.2);font-family:var(--mono);margin-top:3px}
+.st-line{font-size:10px;font-family:var(--mono);margin-top:5px}
+.yt-row{display:flex;gap:8px;margin-bottom:8px}
+.yt-input{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;padding:7px 10px;font-family:var(--mono);outline:none;transition:border-color .15s}
+.yt-input:focus{border-color:var(--red)}
+.yt-input::placeholder{color:rgba(255,255,255,0.2)}
+.yt-btn{background:var(--red);border:none;color:#fff;font-size:11px;font-weight:500;padding:7px 13px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+.yt-btn:hover{opacity:.85}
+.yt-btn:disabled{background:rgba(255,255,255,0.08);cursor:not-allowed;color:rgba(255,255,255,0.25);opacity:1}
+
+/* library */
+#lib-modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:200}
+.lib-box{background:var(--black2);border:1px solid rgba(255,255,255,0.1);border-radius:16px;width:600px;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 40px 80px rgba(0,0,0,0.6)}
+.lib-hdr{padding:18px 22px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.lib-title{font-size:13px;font-weight:600;color:var(--white)}
+.lib-count{font-size:11px;color:rgba(255,255,255,0.3);font-family:var(--mono)}
+.lib-scroll{overflow-y:auto;flex:1;padding:14px}
+.lib-item{background:var(--black3);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.lib-item:hover{border-color:rgba(255,255,255,0.12)}
+.lib-irow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.lib-lbl{font-size:12px;font-weight:600;color:var(--white)}
+.lib-date{font-size:10px;color:rgba(255,255,255,0.25);font-family:var(--mono);margin-left:auto}
+.lib-txt{font-size:11px;color:rgba(255,255,255,0.4);line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:130px;overflow-y:auto;margin-bottom:10px;font-family:var(--mono)}
+.lib-btns{display:flex;gap:6px}
+.lb{background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);font-size:10px;font-weight:500;padding:4px 11px;border-radius:5px;cursor:pointer;transition:all .15s}
+.lb:hover{background:rgba(255,255,255,0.06);color:var(--white)}
+.lb.copied{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.3);color:#22c55e}
+.lb.del:hover{background:rgba(232,20,42,0.08);border-color:rgba(232,20,42,0.3);color:var(--red)}
+.lib-empty{text-align:center;padding:48px 20px;color:rgba(255,255,255,0.2);font-size:13px}
+.s-note{font-size:11px;color:rgba(255,255,255,0.25);font-family:var(--mono);margin-bottom:10px;line-height:1.6}
+@keyframes blink2{0%,100%{opacity:.25}50%{opacity:1}}
+.blink{animation:blink2 1s ease-in-out infinite}
+
+/* ═══════════════════════════
+   MOBILE RESPONSIVE
+═══════════════════════════ */
+#panel-toggle{display:none}
+
+@media(max-width:768px){
+  /* give canvas breathing room above the panel */
+  #canvas{padding-bottom:52px}
+
+  /* home page */
+  #nav{padding:14px 20px}
+  .nav-logo-text{font-size:14px}
+  .nav-right .nav-link{display:none}
+  .hero-h1{font-size:clamp(36px,10vw,64px);letter-spacing:-2px}
+  .hero-sub{font-size:15px}
+  .hero-btns{flex-direction:column;align-items:center;gap:10px}
+  .btn-hero,.btn-hero-ghost{width:100%;max-width:320px;justify-content:center}
+  .hero-stats{gap:24px}
+  .stat-num{font-size:22px}
+  #features{padding:48px 20px}
+  .section-title{font-size:clamp(22px,6vw,36px)}
+  .features-grid{grid-template-columns:1fr;gap:12px}
+  #how{padding:48px 20px}
+  .steps{grid-template-columns:1fr;gap:16px}
+  .steps::before{display:none}
+  #cta-section{padding:60px 20px}
+  .cta-inner{padding:40px 24px}
+  .cta-h2{font-size:clamp(22px,6vw,36px)}
+  .cta-features{gap:12px}
+  .preview-inner{height:240px}
+  .pc1,.pc4{display:none}
+  .pc3,.pc5{display:none}
+  #marquee-wrap{padding:40px 0}
+  #footer{padding:20px;flex-direction:column;text-align:center;gap:8px}
+  #demo{padding:48px 20px}
+
+  /* login overlay */
+  .login-card{padding:0 16px}
+  .l-logo-name{font-size:22px}
+  .l-h1{font-size:26px}
+  .l-p{font-size:13px}
+  .l-pills .l-pill{display:none}
+  .l-pill:nth-child(-n+4){display:block}
+
+  /* workspace topbar */
+  #ws-topbar{
+    height:auto;flex-wrap:wrap;padding:8px 10px;gap:6px;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+  }
+  .ws-logo{margin-right:0}
+  .ws-divider{display:none}
+  .ws-chip{font-size:10px;padding:4px 8px}
+  .ws-right{margin-left:0;width:100%;justify-content:flex-end;gap:4px;overflow-x:auto}
+  .ws-icon-btn{font-size:10px;padding:4px 8px;height:auto}
+  .back-btn{font-size:10px;padding:4px 8px}
+
+  /* canvas + panel layout */
+  #ws-main{flex-direction:column}
+  #canvas{flex:1;min-height:0}
+
+  /* panel becomes bottom sheet */
+  #panel{
+    width:100%;height:auto;max-height:42vh;
+    border-left:none;border-top:1px solid rgba(255,255,255,0.08);
+    flex-direction:column;
+    z-index:25;
+    position:relative;
+  }
+  #panel-toggle{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px;cursor:pointer;background:var(--black3);flex-shrink:0;
+  }
+  .panel-toggle-label{font-size:11px;font-weight:600;font-family:var(--mono);letter-spacing:1px;color:rgba(255,255,255,0.4);text-transform:uppercase}
+  .panel-toggle-arrow{font-size:14px;color:rgba(255,255,255,0.3);transition:transform .2s}
+  .panel-toggle-arrow.open{transform:rotate(180deg)}
+  #panel-inner{display:none;flex-direction:column;flex:1;overflow:hidden}
+  #panel-inner.open{display:flex}
+  .p-scroll{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:6px}
+  .gen-group-lbl{grid-column:1/-1}
+  .gen-div{grid-column:1/-1}
+
+  /* drawer */
+  #drawer{right:0;max-height:55vh;z-index:60}
+  .d-hdr{padding:10px 14px;flex-wrap:wrap;gap:6px}
+  .d-acts{margin-left:0;width:100%;justify-content:flex-end}
+  .d-body{font-size:12px;padding:12px 14px}
+
+  /* modals */
+  .modal{width:calc(100vw - 32px)!important;max-width:420px;padding:18px}
+  .lib-box{width:calc(100vw - 24px);max-height:88vh}
+  #guide-box{width:calc(100vw - 32px);padding:22px;max-height:90vh}
+
+  /* help chatbot */
+  #help-btn{bottom:16px;right:16px;width:46px;height:46px;font-size:20px}
+  #help-panel{width:calc(100vw - 24px);right:12px;bottom:74px;height:420px}
+
+  /* cards */
+  .card{min-width:160px}
+}
+
+@media(max-width:480px){
+  .hero-h1{letter-spacing:-1.5px}
+  .ws-chip{font-size:10px;padding:3px 7px}
+  .hero-stats{flex-wrap:wrap;gap:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HOME PAGE ═══ -->
+<div id="home">
+<canvas id="bg-canvas"></canvas>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<!-- Nav -->
+<nav id="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-mark">CD</div>
+    <span class="nav-logo-text">ContentDrop</span>
+  </div>
+  <div class="nav-right">
+    <button class="nav-link" onclick="scrollToFeatures()">Features</button>
+    <button class="nav-link" onclick="scrollToHow()">How it works</button>
+    <button class="nav-link" onclick="scrollToPricing()">Pricing</button>
+    <button class="nav-cta" onclick="enterWorkspace()">Open Workspace →</button>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section id="hero">
+  <div class="hero-tag"><span class="hero-tag-dot"></span>AI-Powered Content Workspace</div>
+  <h1 class="hero-h1">Create content that<br/><span>actually converts</span></h1>
+  <p class="hero-sub">One visual workspace to generate a month of content across every platform — in a single session.</p>
+  <div class="hero-typewriter">→ <span id="typewriter"></span><span class="cursor"></span></div>
+  <div class="hero-btns">
+    <button class="btn-hero" onclick="enterWorkspace()">Get ContentDrop — $27 <span>→</span></button>
+    <button class="btn-hero-ghost" onclick="scrollToHow()">See how it works</button>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">34<span>+</span></div><div class="stat-label">content generators</div></div>
+    <div class="stat"><div class="stat-num">1<span>x</span></div><div class="stat-label">payment forever</div></div>
+    <div class="stat"><div class="stat-num">6<span>+</span></div><div class="stat-label">platforms covered</div></div>
+    <div class="stat"><div class="stat-num">∞</div><div class="stat-label">generates</div></div>
+  </div>
+</section>
+
+<!-- Floating Preview Cards -->
+<div class="preview-wrap">
+  <div class="preview-inner">
+    <div class="preview-card pc1">
+      <div class="pc-strip" style="background:#c8000a"></div>
+      <span class="pc-tag" style="background:rgba(200,0,10,0.12);color:#c8000a">YOUTUBE</span>
+      <div class="pc-title">How I Made $3k From One Video</div>
+      <div class="pc-body">transcript loaded · 4,200 words</div>
+    </div>
+    <div class="preview-card pc2">
+      <div class="pc-strip" style="background:#22c55e"></div>
+      <span class="pc-tag" style="background:rgba(34,197,94,0.12);color:#22c55e">GENERATED</span>
+      <div class="pc-title">📸 IG Caption</div>
+      <div class="pc-body">nobody tells you this but your phone is a money printer waiting to happen 💰 here's exactly what I did...</div>
+    </div>
+    <div class="preview-card pc3">
+      <div class="pc-strip" style="background:#a855f7"></div>
+      <span class="pc-tag" style="background:rgba(168,85,247,0.12);color:#a855f7">PDF</span>
+      <div class="pc-title">Brand Strategy Guide.pdf</div>
+      <div class="pc-body">extracted · 12 pages of content ready to generate from</div>
+    </div>
+    <div class="preview-card pc4">
+      <div class="pc-strip" style="background:#D4AF37"></div>
+      <span class="pc-tag" style="background:rgba(212,175,55,0.12);color:#D4AF37">REFERENCE</span>
+      <div class="pc-title">My Brand Reference</div>
+      <div class="pc-body">voice · ICA · offers · platforms</div>
+    </div>
+    <div class="preview-card pc5">
+      <div class="pc-strip" style="background:#22c55e"></div>
+      <span class="pc-tag" style="background:rgba(34,197,94,0.12);color:#22c55e">GENERATED</span>
+      <div class="pc-title">⚡ 7-Sec TikTok × 3</div>
+      <div class="pc-body">[VISUAL]: phone on desk<br/>[TEXT]: nobody told me this<br/>[CTA]: comment MONEY</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marquee -->
+<div id="marquee-wrap">
+  <div class="marquee-track" id="marquee1"></div>
+  <div class="marquee-track2" id="marquee2"></div>
+</div>
+
+
+<!-- Demo Video -->
+<section id="demo" style="position:relative;z-index:5;padding:80px 48px;border-top:1px solid rgba(255,255,255,0.06);text-align:center">
+  <div class="section-label">See it in action</div>
+  <h2 class="section-title" style="margin-bottom:10px">Watch ContentDrop work</h2>
+  <p class="section-sub">from blank board to publish-ready content in under 60 seconds</p>
+  <div style="max-width:860px;margin:0 auto;position:relative">
+    <div style="position:relative;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);box-shadow:0 32px 80px rgba(0,0,0,0.6);background:var(--black2);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center">
+      <!-- PASTE YOUR VIDEO EMBED HERE — replace this entire div with your iframe -->
+      <!-- YouTube: <iframe src="https://www.youtube.com/embed/YOUR_ID?rel=0&modestbranding=1" style="position:absolute;inset:0;width:100%;height:100%;border:none" allowfullscreen></iframe> -->
+      <!-- Loom: <iframe src="https://www.loom.com/embed/YOUR_ID" style="position:absolute;inset:0;width:100%;height:100%;border:none" allowfullscreen></iframe> -->
+      <div style="text-align:center;padding:40px 24px">
+        <div style="width:72px;height:72px;border-radius:50%;background:rgba(232,20,42,0.15);border:1px solid rgba(232,20,42,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">▶</div>
+        <div style="font-size:17px;font-weight:600;color:var(--white);margin-bottom:8px">Demo video drops soon 👑</div>
+        <div style="font-size:13px;color:var(--white3);font-family:var(--mono)">replace this placeholder with your YouTube or Loom embed</div>
+      </div>
+    </div>
+    <div style="position:absolute;bottom:-40px;left:50%;transform:translateX(-50%);width:60%;height:80px;background:radial-gradient(ellipse,rgba(232,20,42,0.18),transparent 70%);filter:blur(20px);pointer-events:none"></div>
+  </div>
+  <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-top:60px">
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--white3)"><span style="color:var(--red);font-weight:700">01</span> Add cards to your board</div>
+    <div style="color:var(--white3);opacity:.3">→</div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--white3)"><span style="color:var(--red);font-weight:700">02</span> Select &amp; choose output type</div>
+    <div style="color:var(--white3);opacity:.3">→</div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--white3)"><span style="color:var(--red);font-weight:700">03</span> Copy, save, post 🔥</div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+  <div class="section-label">What it does</div>
+  <h2 class="section-title">Your entire content strategy,<br/>one workspace</h2>
+  <p class="section-sub">Add your sources, select what you want to generate, and get production-ready content in seconds.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <div class="feature-title">34 Content Generators</div>
+      <div class="feature-desc">IG captions, TikTok scripts, YouTube scripts, emails, blog posts, podcast scripts, reels, UGC, ASMR, short films, ebooks, sales pages, lead magnets, SEO titles — all in one place.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🛒</div>
+      <div class="feature-title">Digital Product Suite</div>
+      <div class="feature-desc">Product SEO titles and descriptions, full sales pages, product launch copy, lead magnets, ebook generator (up to 20 pages!), bundle ideas, mockup prompts, FAQ generator, and thank you pages.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔗</div>
+      <div class="feature-title">Multi-Source Intelligence</div>
+      <div class="feature-desc">Drop in YouTube videos, PDFs, URLs, images, and notes. ContentDrop reads everything and generates content that actually understands your brand.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌟</div>
+      <div class="feature-title">AI Twin & Creator Tools</div>
+      <div class="feature-desc">Full AI twin vlog scripts with shot lists, ASMR channel scripts, short film scripts, and 10 detailed image prompts per generate — perfect for faceless creators.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💾</div>
+      <div class="feature-title">Saves Everything</div>
+      <div class="feature-desc">Your board, cards, positions, and saved library all persist between sessions. Accidentally delete a card? Hit undo. Come back exactly where you left off.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <div class="feature-title">Powered by Claude AI</div>
+      <div class="feature-desc">Uses your own free Anthropic API key. New accounts get $5 free credit — that's 1,500+ generates before you spend a dime. Pay cents per use, not $50/month.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌙</div>
+      <div class="feature-title">Light & Dark Mode</div>
+      <div class="feature-desc">Toggle between sleek dark and clean light mode. Works beautifully in both. Your preference is saved automatically every time.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <div class="feature-title">Mobile Friendly</div>
+      <div class="feature-desc">Works on your phone, tablet, and desktop. Touch drag cards on mobile, tap the generate panel to expand it, and post content from anywhere.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📐</div>
+      <div class="feature-title">Drag, Resize & Arrange</div>
+      <div class="feature-desc">Drag cards anywhere on an infinite canvas. Resize them to fit your workflow. Pan the board. Shift-click to select multiple cards and combine your sources.</div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="how">
+  <div class="section-label">How it works</div>
+  <h2 class="section-title">Three steps to a month of content</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-title">Add your sources</div>
+      <div class="step-desc">Drop in YouTube videos, PDFs, articles, images, or write a note. ContentDrop reads and extracts everything automatically.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-title">Select & Generate</div>
+      <div class="step-desc">Click any cards to select them, then choose your content type from the panel. Hit generate and watch it work.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-title">Copy, Save & Post</div>
+      <div class="step-desc">Every output lands on your board and in the output drawer. Save it to your library, copy it, and go post.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing CTA -->
+<section id="cta-section">
+  <div class="cta-inner">
+    <div class="section-label" style="margin-bottom:12px">Limited launch price</div>
+    <h2 class="cta-h2">Own it forever.<br/>No subscriptions.</h2>
+    <p class="cta-sub">One payment. Unlimited generates. Use your own API key — spend cents, not dollars.</p>
+    <div style="margin-bottom:20px">
+      <div class="price-badge">
+        <span class="price-big">$27</span>
+        <span class="price-note">one-time · own forever</span>
+      </div>
+    </div>
+    <div class="cta-features">
+      <span class="cta-feat">Unlimited generates</span>
+      <span class="cta-feat">24 content types</span>
+      <span class="cta-feat">Works in any browser</span>
+      <span class="cta-feat">No monthly fees ever</span>
+    </div>
+    <button class="btn-hero" onclick="enterWorkspace()" style="margin:0 auto;display:inline-flex">Get ContentDrop — $27 →</button>
+    <div style="margin-top:16px;font-size:12px;color:rgba(255,255,255,0.3)">Open it right now — no account needed</div>
+  </div>
+</section>
+
+<footer id="footer">
+  <div class="footer-logo">ContentDrop</div>
+  <div class="footer-note">powered by Claude AI · your key, your data</div>
+</footer>
+</div><!-- /home -->
+
+<!-- ═══ WORKSPACE ═══ -->
+<div id="workspace">
+  <!-- Animated Login Overlay -->
+  <div id="login-overlay">
+    <div class="login-grid"></div>
+    <div class="l-orb l-orb1"></div>
+    <div class="l-orb l-orb2"></div>
+    <div class="l-orb l-orb3"></div>
+    <div class="login-pills">
+      <div class="l-pill" style="top:12%;left:5%;--d:11s;--delay:0s">📸 IG Caption</div>
+      <div class="l-pill" style="top:20%;right:6%;--d:13s;--delay:-2s">🎬 TikTok Script</div>
+      <div class="l-pill" style="top:55%;left:3%;--d:9s;--delay:-4s">📧 Full Email</div>
+      <div class="l-pill" style="top:70%;right:5%;--d:14s;--delay:-1s">🔥 Viral Rewrite</div>
+      <div class="l-pill" style="bottom:15%;left:8%;--d:10s;--delay:-3s">🎥 YouTube Script</div>
+      <div class="l-pill" style="bottom:22%;right:8%;--d:12s;--delay:-5s">🤖 AI Twin Prompts</div>
+      <div class="l-pill" style="top:38%;left:1%;--d:15s;--delay:-6s">🪝 Viral Hooks</div>
+      <div class="l-pill" style="top:42%;right:2%;--d:11s;--delay:-2.5s">🛍️ Benable Listing</div>
+    </div>
+
+    <div class="login-card">
+      <div class="l-logo">
+        <div class="l-logo-mark">CD</div>
+        <div class="l-logo-text">
+          <div class="l-logo-name">ContentDrop</div>
+          <div class="l-logo-sub">AI Content Workspace</div>
+        </div>
+      </div>
+
+      <div class="l-heading">
+        <div class="l-h1">Create content<br>at the <em>speed of now</em></div>
+        <div class="l-p">Paste your Anthropic API key to unlock<br>24 content generators in one visual workspace.</div>
+      </div>
+
+      <div class="l-form">
+        <div class="l-label">Your Anthropic API Key</div>
+        <div class="l-input-wrap">
+          <input class="l-input" id="login-key-input" type="password" placeholder="sk-ant-api03-..." autocomplete="off" onkeydown="if(event.key==='Enter')loginActivate()"/>
+        </div>
+        <button class="l-activate" onclick="loginActivate()">Enter the workspace →</button>
+      </div>
+
+      <div class="l-hint">
+        Don't have a key? <a href="https://console.anthropic.com/api-keys" target="_blank">Get one free at Anthropic</a><br>
+        <span style="color:rgba(255,255,255,0.35);font-size:12px;margin-top:6px;display:block">works with your free Anthropic account — new accounts get $5 free credit, that's <strong style="color:var(--red)">1,500+ content generations</strong> before you spend a dime 👑</span>
+        <span style="color:rgba(255,255,255,0.18);font-size:11px;margin-top:6px;display:block">Your key is stored locally on your device only. Never shared.</span>
+      </div>
+
+      <div class="l-dots">
+        <div class="l-dot"></div>
+        <div class="l-dot"></div>
+        <div class="l-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Banner (hidden, kept for compat) -->
+  <div id="api-banner">
+    <input id="key-input" type="password"/>
+    <span id="key-ok"></span>
+  </div>
+
+  <!-- WS Topbar -->
+  <div id="ws-topbar">
+    <div class="ws-logo">
+      <div class="ws-logo-mark">CD</div>
+      <span class="ws-logo-name">ContentDrop</span>
+    </div>
+    <div class="ws-divider"></div>
+    <button class="ws-chip" onclick="openModal('note')"><span class="chip-dot" style="background:#888"></span>Note</button>
+    <button class="ws-chip" onclick="openModal('youtube')"><span class="chip-dot" style="background:#c8000a"></span>YouTube</button>
+    <button class="ws-chip" onclick="openModal('url')"><span class="chip-dot" style="background:#378ADD"></span>URL</button>
+    <button class="ws-chip" onclick="openModal('brand')"><span class="chip-dot" style="background:#D4AF37"></span>Reference</button>
+    <button class="ws-chip" onclick="openModal('pdf')"><span class="chip-dot" style="background:#a855f7"></span>PDF</button>
+    <button class="ws-chip" onclick="openModal('image')"><span class="chip-dot" style="background:#f97316"></span>Image</button>
+    <div class="ws-right">
+      <span class="ws-status" id="ws-status-txt">Click cards to select</span>
+      <button class="ws-icon-btn" onclick="openLib()">Library <span class="saved-badge" id="saved-badge">0</span></button>
+      <div class="theme-toggle" onclick="toggleTheme()">
+        <span class="tt-opt active" id="tt-dark">🌙</span>
+        <span class="tt-opt" id="tt-light">☀️</span>
+      </div>
+      <button class="ws-icon-btn" onclick="openGuide()">📖 How to use</button>
+      <button class="ws-icon-btn" onclick="openSettings()">⚙ Settings</button>
+      <button class="back-btn" onclick="exitWorkspace()">← Home</button>
+    </div>
+  </div>
+
+  <!-- Canvas + Panel -->
+  <div id="ws-main">
+    <div id="canvas" onmousedown="canvasDown(event)" ontouchstart="canvasTouchStart(event)" ontouchmove="canvasTouchMove(event)" ontouchend="canvasTouchEnd()"><div id="board"></div></div>
+    <div id="panel">
+      <div id="panel-toggle" onclick="togglePanel()">
+        <span class="panel-toggle-label">⚡ Generate</span>
+        <span class="panel-toggle-arrow" id="panel-arrow">▲</span>
+      </div>
+      <div id="panel-inner">
+        <div class="p-top">
+          <div class="p-heading">Generate</div>
+          <div class="p-hint" id="p-hint">select a card then generate ✨</div>
+        </div>
+        <div class="p-scroll" id="gen-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Output Drawer -->
+  <div id="drawer">
+    <div class="d-hdr">
+      <span class="d-tag">✧ Generated</span>
+      <span class="d-label" id="d-label"></span>
+      <div class="d-acts">
+        <a id="canva-btn" href="https://www.canva.com/create/ebooks/" target="_blank" rel="noopener" style="display:none;align-items:center;gap:6px;background:#7B2FBE;border:none;color:#fff;font-size:12px;font-weight:500;padding:5px 14px;border-radius:6px;text-decoration:none;transition:opacity .2s;white-space:nowrap" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">✦ Design in Canva →</a>
+        <button class="d-btn" id="save-btn" onclick="saveOutput()">Save</button>
+        <button class="d-btn" id="copy-btn" onclick="copyOutput()">Copy</button>
+        <button class="d-close" onclick="closeDrawer()">×</button>
+      </div>
+    </div>
+    <div class="d-body" id="d-body"></div>
+  </div>
+</div><!-- /workspace -->
+
+<!-- Modals -->
+<div class="overlay" id="ebook-modal" onclick="if(event.target===this)closeEbookModal()">
+  <div class="modal" style="width:380px">
+    <div class="m-title" style="--m-col:#E8142A">📖 Ebook Generator</div>
+    <div class="m-lbl">How many pages? (1–20)</div>
+    <div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">
+        <input type="range" id="ebook-slider" min="1" max="20" value="10" oninput="document.getElementById('ebook-page-num').textContent=this.value;ebookPages=parseInt(this.value)" style="flex:1;accent-color:var(--red)"/>
+        <span id="ebook-page-num" style="font-size:22px;font-weight:700;color:var(--red);min-width:32px;text-align:center">10</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.25);font-family:var(--mono)"><span>1 page</span><span>20 pages</span></div>
+    </div>
+    <div style="background:rgba(232,20,42,0.06);border:1px solid rgba(232,20,42,0.15);border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:rgba(255,255,255,0.45);font-family:var(--mono);line-height:1.6">each page = intro + full content sections + key takeaways. select your cards on the board first so the ebook matches your topic.</div>
+    <div class="m-btns">
+      <button class="btn-p" onclick="generateEbook()">Generate Ebook →</button>
+      <button class="btn-s" onclick="closeEbookModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="overlay" id="card-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="m-title" id="m-title"></div>
+    <div id="yt-sec" style="display:none;margin-bottom:12px">
+      <div class="yt-row">
+        <input class="yt-input" id="yt-url" placeholder="paste YouTube URL..." oninput="document.getElementById('yt-btn').disabled=!this.value.trim()"/>
+        <button class="yt-btn" id="yt-btn" onclick="fetchTx()" disabled>Get Transcript</button>
+      </div>
+      <div class="st-line" id="yt-st"></div>
+      <div style="margin-top:8px;padding:10px 12px;background:rgba(232,20,42,0.06);border:1px solid rgba(232,20,42,0.15);border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <span style="font-size:11px;color:rgba(255,255,255,0.45);font-family:var(--mono);line-height:1.5">no transcript? get it free →</span>
+        <a href="https://notegpt.io" target="_blank" rel="noopener noreferrer" style="background:var(--red);color:#fff;font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;text-decoration:none;white-space:nowrap;transition:opacity .2s;flex-shrink:0" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">Open NoteGPT ↗</a>
+      </div>
+    </div>
+    <div id="pdf-sec" style="display:none;margin-bottom:12px">
+      <input type="file" id="pdf-file" accept=".pdf" style="display:none" onchange="handlePdf(event)"/>
+      <div class="dz" onclick="document.getElementById('pdf-file').click()"><div class="dz-icon">📄</div><div class="dz-txt">Click to upload PDF</div><div class="dz-sub">AI reads and extracts automatically</div></div>
+      <div class="st-line" id="pdf-st"></div>
+    </div>
+    <div id="img-sec" style="display:none;margin-bottom:12px">
+      <input type="file" id="img-file" accept="image/*" style="display:none" onchange="handleImg(event)"/>
+      <div class="dz" id="img-dz" onclick="document.getElementById('img-file').click()"><div id="img-dz-inner"><div class="dz-icon">🖼️</div><div class="dz-txt">Click to upload image</div><div class="dz-sub">AI will analyze it</div></div></div>
+      <div class="st-line" id="img-st"></div>
+    </div>
+    <div class="m-lbl">Title</div>
+    <input class="m-input" id="m-card-title" placeholder="Card title..."/>
+    <div class="m-lbl">Content</div>
+    <textarea class="m-ta" id="m-card-content" rows="6" onkeydown="if(event.key==='Enter'&&event.metaKey)confirmAdd()"></textarea>
+    <div class="m-hint">⌘ + Enter to add</div>
+    <div class="m-btns">
+      <button class="btn-p" onclick="confirmAdd()">Add to Board</button>
+      <button class="btn-s" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="lib-modal" onclick="if(event.target===this)closeLib()">
+  <div class="lib-box">
+    <div class="lib-hdr">
+      <span class="lib-title">Saved Library</span>
+      <span class="lib-count" id="lib-count">0 items</span>
+      <button class="d-close" style="margin-left:auto" onclick="closeLib()">×</button>
+    </div>
+    <div class="lib-scroll" id="lib-scroll"></div>
+  </div>
+</div>
+
+<div class="overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal">
+    <div class="m-title" style="--m-col:#D4AF37">Settings</div>
+    <div class="m-lbl">Anthropic API Key</div>
+    <div class="s-note">get free key at console.anthropic.com → API Keys. new accounts get $5 free credit.</div>
+    <input class="m-input" id="s-key" type="password" placeholder="sk-ant-..."/>
+    <div class="m-lbl" style="margin-top:8px">Supadata Key <span style="color:rgba(255,255,255,0.2);font-weight:400">(optional)</span></div>
+    <div class="s-note">auto-fetch YouTube transcripts. free at supadata.ai</div>
+    <input class="m-input" id="s-supa" type="password" placeholder="your Supadata key..."/>
+    <button class="btn-p" style="width:100%;margin-top:4px" onclick="saveSettings()">Save & Close</button>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.07)">
+      <div class="s-note">accidentally deleted your brand card?</div>
+      <button onclick="restoreBrandCard();closeSettings();" style="width:100%;background:transparent;border:1px solid rgba(212,175,55,0.4);color:#D4AF37;font-size:12px;font-weight:500;padding:9px;border-radius:7px;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(212,175,55,0.08)'" onmouseout="this.style.background='transparent'">◆ Restore Brand Reference Card</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ── HELP CHATBOT ── -->
+<style>
+/* help button */
+#help-btn{
+  position:fixed;bottom:28px;right:28px;z-index:500;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--red);border:none;color:#fff;
+  font-size:22px;cursor:pointer;
+  box-shadow:0 4px 20px rgba(232,20,42,0.5);
+  transition:all .25s;display:flex;align-items:center;justify-content:center;
+}
+#help-btn:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(232,20,42,0.65)}
+#help-btn.open{background:#333;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
+
+/* help panel */
+#help-panel{
+  position:fixed;bottom:92px;right:28px;z-index:499;
+  width:340px;height:480px;
+  background:#111;border:1px solid rgba(255,255,255,0.1);
+  border-radius:18px;display:none;flex-direction:column;
+  box-shadow:0 24px 64px rgba(0,0,0,0.6);
+  overflow:hidden;animation:helpSlideUp .25s ease;
+}
+@keyframes helpSlideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+#help-panel.open{display:flex}
+.help-hdr{padding:14px 16px;background:#1a1a1c;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.help-avatar{width:32px;height:32px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.help-name{font-size:13px;font-weight:600;color:#fff}
+.help-status{font-size:10px;color:rgba(255,255,255,0.35);font-family:var(--mono)}
+.help-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.help-msg{max-width:85%;font-size:12px;line-height:1.65;padding:9px 12px;border-radius:12px;word-break:break-word}
+.help-msg.bot{background:#1e1e22;color:rgba(255,255,255,0.85);border-radius:4px 12px 12px 12px;align-self:flex-start}
+.help-msg.user{background:var(--red);color:#fff;border-radius:12px 4px 12px 12px;align-self:flex-end}
+.help-msg.typing{color:rgba(255,255,255,0.4);font-style:italic}
+.help-chips{padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:6px;flex-shrink:0}
+.help-chip{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);font-size:11px;padding:5px 10px;border-radius:20px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.help-chip:hover{background:rgba(232,20,42,0.15);border-color:rgba(232,20,42,0.4);color:#fff}
+.help-input-row{padding:10px 12px;border-top:1px solid rgba(255,255,255,0.07);display:flex;gap:8px;flex-shrink:0}
+.help-input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:20px;color:#fff;font-size:12px;padding:8px 14px;outline:none;font-family:var(--font)}
+.help-input:focus{border-color:var(--red)}
+.help-input::placeholder{color:rgba(255,255,255,0.25)}
+.help-send{background:var(--red);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;transition:opacity .2s}
+.help-send:hover{opacity:.85}
+
+/* quick start guide */
+#guide-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);z-index:600;display:none;align-items:center;justify-content:center}
+#guide-overlay.open{display:flex}
+#guide-box{background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:520px;max-height:85vh;overflow-y:auto;padding:32px;box-shadow:0 32px 80px rgba(0,0,0,0.7);animation:helpSlideUp .3s ease}
+.guide-close{position:absolute;top:20px;right:20px;background:transparent;border:none;color:rgba(255,255,255,0.4);font-size:20px;cursor:pointer}
+.guide-title{font-size:22px;font-weight:700;color:#fff;letter-spacing:-.5px;margin-bottom:6px}
+.guide-sub{font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:28px;line-height:1.5}
+.guide-step{display:flex;gap:16px;margin-bottom:22px;align-items:flex-start}
+.guide-num{width:36px;height:36px;border-radius:50%;background:rgba(232,20,42,0.15);border:1px solid rgba(232,20,42,0.3);color:var(--red);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.guide-step-body{}
+.guide-step-title{font-size:15px;font-weight:600;color:#fff;margin-bottom:4px}
+.guide-step-desc{font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6}
+.guide-step-desc strong{color:rgba(255,255,255,0.8);font-weight:600}
+.guide-tip{background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:10px;padding:12px 14px;margin-top:24px;font-size:12px;color:rgba(212,175,55,0.8);line-height:1.6}
+.guide-tip strong{color:#D4AF37}
+.guide-done-btn{width:100%;background:var(--red);border:none;color:#fff;font-size:14px;font-weight:600;padding:13px;border-radius:10px;cursor:pointer;margin-top:24px;transition:opacity .2s}
+.guide-done-btn:hover{opacity:.88}
+</style>
+
+<button id="help-btn" onclick="toggleHelp()" title="Need help?">?</button>
+
+<div id="help-panel">
+  <div class="help-hdr">
+    <div class="help-avatar">✦</div>
+    <div>
+      <div class="help-name">ContentDrop Helper</div>
+      <div class="help-status">ask me anything 👑</div>
+    </div>
+    <button onclick="openGuide()" style="margin-left:auto;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">📖 quick guide</button>
+  </div>
+  <div class="help-msgs" id="help-msgs">
+    <div class="help-msg bot">hey! 👋 i'm your ContentDrop helper. ask me anything about how to use this tool — no question is too basic!</div>
+  </div>
+  <div class="help-chips" id="help-chips">
+    <div class="help-chip" onclick="askHelp('How do I get started?')">How do I start?</div>
+    <div class="help-chip" onclick="askHelp('What is an API key and how do I get one?')">What is an API key?</div>
+    <div class="help-chip" onclick="askHelp('How do I add content to the board?')">Adding cards</div>
+    <div class="help-chip" onclick="askHelp('How do I generate content?')">Generate content</div>
+    <div class="help-chip" onclick="askHelp('How do I save my results?')">Saving results</div>
+    <div class="help-chip" onclick="askHelp('What can ContentDrop make for me?')">What can it make?</div>
+  </div>
+  <div class="help-input-row">
+    <input class="help-input" id="help-input" placeholder="type your question..." onkeydown="if(event.key==='Enter')sendHelp()"/>
+    <button class="help-send" onclick="sendHelp()">→</button>
+  </div>
+</div>
+
+<!-- Quick Start Guide -->
+<div id="guide-overlay" onclick="if(event.target===this)closeGuide()">
+  <div id="guide-box" style="position:relative">
+    <button class="guide-close" onclick="closeGuide()">×</button>
+    <div class="guide-title">How to use ContentDrop 👑</div>
+    <div class="guide-sub">3 simple steps. even if you've never used AI before, you've got this.</div>
+
+    <div class="guide-step">
+      <div class="guide-num">1</div>
+      <div class="guide-step-body">
+        <div class="guide-step-title">Add your content to the board</div>
+        <div class="guide-step-desc">See the buttons at the top? Click <strong>+ Note</strong> to type an idea. Click <strong>+ YouTube</strong> to paste a YouTube link. Click <strong>+ PDF</strong> to upload a document. Click <strong>+ Reference</strong> to add your brand info.<br><br>Each one creates a <strong>card</strong> on your board. Think of cards like sticky notes 📝</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">2</div>
+      <div class="guide-step-body">
+        <div class="guide-step-title">Click a card to select it</div>
+        <div class="guide-step-desc">Click any card on the board. It will glow red — that means it's selected ✅<br><br>Want to use multiple cards together? Hold <strong>Shift</strong> and click more cards. ContentDrop will read ALL of them when creating your content.<br><br>💡 Tip: select your brand card + a YouTube card together to get content that matches your voice!</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">3</div>
+      <div class="guide-step-body">
+        <div class="guide-step-title">Pick what you want to create</div>
+        <div class="guide-step-desc">Look at the right side panel — it shows everything ContentDrop can make for you. Things like:<br><br>
+        📸 <strong>IG Caption</strong> — a ready-to-post Instagram caption<br>
+        🎬 <strong>TikTok Script</strong> — a full script to record<br>
+        📧 <strong>Full Email</strong> — a marketing email<br>
+        📖 <strong>Ebook</strong> — a complete ebook (you pick how many pages!)<br><br>
+        Just click any of them and your content appears in seconds ⚡</div>
+      </div>
+    </div>
+
+    <div class="guide-step">
+      <div class="guide-num">4</div>
+      <div class="guide-step-body">
+        <div class="guide-step-title">Copy it and post it!</div>
+        <div class="guide-step-desc">When your content appears at the bottom of the screen, click <strong>Copy</strong> to copy it. Then paste it wherever you need it — Instagram, TikTok, your email tool, anywhere.<br><br>Hit <strong>Save</strong> to keep it in your Library so you can come back to it anytime.</div>
+      </div>
+    </div>
+
+    <div class="guide-tip">
+      <strong>💡 The golden rule:</strong> Add cards first → Select cards → Click what you want to make. That's it! ContentDrop does the rest. You don't need to know anything about AI to use this. If it creates something you don't love, just click again — you'll get a different result every time!
+    </div>
+
+    <button class="guide-done-btn" onclick="closeGuide()">Got it — let's create! 🚀</button>
+  </div>
+</div>
+
+<script>
+// ── State
+let apiKey=localStorage.getItem('cd_ak')||'';
+let supaKey=localStorage.getItem('cd_sk')||'';
+let cards=[],selIds=new Set(),savedItems=[];
+let drag=null,resize=null,pan=null,panOff={x:0,y:0},dragStartX=0,dragStartY=0;
+let editId=null,curModal=null,curOut=null,generating=false;
+let ebookPages=10;
+let wsTheme=localStorage.getItem('cd_wstheme')||'dark';
+let _id=0;const uid=()=>`c${++_id}`;
+
+// ── CFG
+const CFG={
+  note:   {a:'#888',   strip:'#888',   tag:'NOTE',      tBg:'rgba(136,136,136,0.12)',  tC:'#888'},
+  youtube:{a:'#c8000a',strip:'#c8000a',tag:'YOUTUBE',   tBg:'rgba(200,0,10,0.12)',     tC:'#c8000a'},
+  url:    {a:'#378ADD',strip:'#378ADD',tag:'URL',        tBg:'rgba(55,138,221,0.12)',   tC:'#378ADD'},
+  brand:  {a:'#D4AF37',strip:'#D4AF37',tag:'REFERENCE', tBg:'rgba(212,175,55,0.12)',   tC:'#D4AF37'},
+  pdf:    {a:'#a855f7',strip:'#a855f7',tag:'PDF',        tBg:'rgba(168,85,247,0.12)',   tC:'#a855f7'},
+  image:  {a:'#f97316',strip:'#f97316',tag:'IMAGE',      tBg:'rgba(249,115,22,0.12)',   tC:'#f97316'},
+  output: {a:'#22c55e',strip:'#22c55e',tag:'GENERATED',  tBg:'rgba(34,197,94,0.12)',   tC:'#22c55e'},
+};
+
+const SYS=`You are a world-class content strategist and copywriter helping content creators, coaches, entrepreneurs, and small business owners create compelling content across all platforms. Analyze board content thoroughly and generate the requested output. Be specific, actionable, write in a voice that converts, and prioritize content that stops the scroll, drives engagement, and gets results.`;
+
+const GEN_GROUPS=[
+  {label:'Social',items:[
+    {id:'caption',l:'IG Caption',e:'📸',p:'Write a strong Instagram caption. Hook first line, value in middle, CTA at end. Natural emojis. Conversational, not corporate.'},
+    {id:'tiktok',l:'TikTok Script',e:'🎬',p:'Write a TikTok/Reel script with 3-second hook, [VISUAL CUE] directions, value content, and CTA. Under 60 seconds.'},
+    {id:'reels',l:'Instagram Reel',e:'🎞️',p:'Write 3 complete Instagram Reel concepts.\n\nFor each:\nREEL [#] — [NAME]\nLENGTH:\nHOOK (5 words max):\nVISUAL CONCEPT:\nVOICEOVER/AUDIO:\nCAPTIONS: [each line 1-6 words]\nCTA:\nPOST CAPTION: [full caption + hashtags]\n\nMix story, value, and offer reels.'},
+    {id:'tiktok7',l:'7-Sec TikTok',e:'⚡',p:'Write 3 seven-second TikTok scripts.\nEach:\n[VISUAL]:\n[TEXT OVERLAY]: 5 words max\n[AUDIO]:\n[CTA]:\nStop the scroll in the first half second.'},
+    {id:'hooks',l:'5 Viral Hooks',e:'🪝',p:'Write 5 viral hooks:\n1. POV opener\n2. Number-based\n3. Bold statement\n4. "If I wanted to..." format\n5. Call-out opener\nEach 1-2 sentences. Impossible to scroll past.'},
+    {id:'captions',l:'Video Captions',e:'💬',p:'Write on-screen captions. Timestamps [0:00],[0:03] etc. 1-6 words per line. Punchy, emoji-forward. Minimum 15-20 lines.'},
+    {id:'thread',l:'Thread Post',e:'🧵',p:'Write a Threads/X post. Conversational, punchy, value-packed. End with question or soft CTA.'},
+    {id:'facebook',l:'Facebook Post',e:'👥',p:'Write 3 Facebook versions:\nV1 — STORY: personal story, 3-5 short paragraphs.\nV2 — VALUE: educational with list.\nV3 — ENGAGEMENT: opinion/question that drives comments.'},
+  ]},
+  {label:'Ads & Email',items:[
+    {id:'adcopy',l:'Ad Copy',e:'💰',p:'Write Facebook/Instagram ad copy:\n- Scroll-stopping headline\n- Primary text (pain → dream)\n- CTA button text\nMake it convert.'},
+    {id:'viral',l:'Viral Rewrite',e:'🔥',p:'Rewrite in the most viral version possible. Proof hooks, specific numbers, transformation language.'},
+    {id:'email',l:'Full Email',e:'📧',p:'Write a complete marketing email.\n\nSUBJECT OPTIONS (3):\n1.\n2.\n3.\nPREVIEW TEXT:\nEMAIL BODY:\n[Hook, value/story, CTA, sign-off. 150-250 words. Conversational.]'},
+  ]},
+  {label:'Long Form',items:[
+    {id:'ytscript',l:'YouTube Script',e:'🎥',p:'Full YouTube script.\n\nTITLE OPTIONS (3):\nTHUMBNAIL TEXT (5 words):\nHOOK (30 sec — no "hey guys"):\nINTRO:\nMAIN: [3-5 sections with [TITLE] + [B-ROLL] notes]\nCTA + OUTRO:\n\n5-8 minutes when spoken.'},
+    {id:'podcast',l:'Podcast Script',e:'🎙️',p:'Full podcast episode.\n\nTITLE OPTIONS (3):\nSHOW NOTES:\nINTRO HOOK:\nSEGMENT 1:\nSEGMENT 2:\nSEGMENT 3:\nOUTRO + CTA:\nSOCIAL CLIPS: [3 moments for short-form]'},
+    {id:'blog',l:'Blog Post',e:'✍️',p:'Full SEO blog post.\n\nTITLES (3):\nMETA (155 chars):\nKEYWORDS:\nBODY: [600-900 words, subheadings, conversational, natural keywords]\nPIN DESCRIPTION:\nINTERNAL LINKS:'},
+    {id:'webcopy',l:'Website Copy',e:'🌐',p:'Conversion website copy.\n\nPAGE TYPE:\nHEADLINES (3):\nSUBHEADLINE:\nHERO:\nBENEFITS (5-6 bullet outcomes):\nSOCIAL PROOF (2-3 testimonial frameworks):\nOFFER:\nCTA OPTIONS (5):\nFAQ (5 objections):\nFOOTER TAGLINE:'},
+    {id:'edu',l:'Educational Content',e:'📚',p:'Educational content piece.\n\nTOPIC:\nFORMAT: [carousel/blog/video]\nOUTCOMES (3):\nBREAKDOWN: [5-7 sections, bold heading + 2-3 sentences + tip]\nSUMMARY (3 bullets):\nCTA:'},
+  ]},
+  {label:'Creator',items:[
+    {id:'vlog',l:'AI Twin Vlog',e:'🌟',p:'Faceless/AI twin vlog script + shot list.\n\nCONCEPT:\nSHOT LIST (10-15):\nSHOT [#] — [SCENE]\nAI PROMPT: [character+outfit+setting+lighting+mood+angle, 50-70 words]\nMOTION:\nVOICEOVER:\nON-SCREEN TEXT:\n\nFULL VOICEOVER SCRIPT:'},
+    {id:'podcast2',l:'ASMR Script',e:'🤫',p:'ASMR channel script.\n\nCONCEPT: [title + trigger type]\nTHUMBNAIL (5 words, soft):\nINTRO WHISPER:\nSEQUENCE (6-10 segments):\n[#] — [TRIGGER]\nSOUND:\nVISUAL:\nWHISPER:\nDURATION:\nOUTRO:\nCAPTION + HASHTAGS:'},
+    {id:'shortfilm',l:'Short Film Script',e:'🎭',p:'Short film script (2-5 min) for faceless creator.\n\nTITLE:\nLOGLINE:\nMOOD:\nSCENES (5-8):\n[#] — [INT/EXT LOCATION TIME]\nAI PROMPT: [60-80 words]\nMOTION:\nACTION:\nDIALOGUE:\nON-SCREEN TEXT:\n\nEnd on a strong emotional beat.'},
+    {id:'aitwin',l:'AI Twin Prompts',e:'🤖',p:'10 AI image/video prompts for faceless creator.\n\nEach:\nPROMPT [#] — [SCENE]\nIMAGE PROMPT: [character+outfit+setting+lighting+mood+angle+style, 50-80 words]\nMOTION:\nCAPTION:\nBEST FOR:\n\nMix lifestyle, luxury, and product-adjacent. All faceless.'},
+  ]},
+  {label:'Affiliate & UGC',items:[
+    {id:'benable',l:'Benable Listing',e:'🛍️',p:'Complete Benable affiliate list.\n\nTITLES (3 — keyword-rich):\nDESCRIPTION:\nITEMS (6-8):\n[#] — [PRODUCT]\nWHY I LOVE IT:\nBEST FOR:\nAFFILIATE CAPTION:\nPIN TITLES (5):\nPIN DESCRIPTION:'},
+    {id:'affiliate',l:'Affiliate Captions',e:'🔗',p:'Affiliate marketing pack.\n\nIG CAPTIONS (3):\nV1 — REVIEW:\nV2 — BEFORE/AFTER:\nV3 — LIST:\nTIKTOK HOOKS (5):\nSTORY FRAMES (3):\nPIN TITLES (3):\nPIN DESCRIPTIONS (3):\nFTC DISCLOSURE:'},
+    {id:'ugc',l:'UGC Script & Hooks',e:'📱',p:'Complete UGC pack.\n\nSCRIPTS (3 — under 60 sec):\n[#] — [ANGLE]\nHOOK:\nBODY:\nCTA:\nVISUALS:\n\nHOOKS (7): POV, Number, Bold, Question, Problem, "Nobody talks about", Transformation\n\nTHUMBNAIL OPTIONS (5):\nAD VERSION:'},
+  ]},
+  {label:'Analyze',items:[
+    {id:'analyze',l:'Analyze Content',e:'🔍',p:'Analyze:\n1. Winning formula/hook being used\n2. Why it works for the audience\n3. How to apply this to your own content\n\nSpecific and immediately actionable.'},
+  ]},
+  {label:'Digital Products',items:[
+    {id:'seo_title',l:'Product SEO Titles',e:'🏷️',p:'Write 10 SEO-optimized product titles for this digital product.\n\nFor each title:\nTITLE: [keyword-rich, benefit-forward, 60 chars max]\nKEYWORD FOCUS: [main search term targeted]\nWHY IT WORKS: [one line explanation]\n\nMix formats: how-to titles, number-based, outcome-focused, problem-solution, and curiosity-gap. Optimize for Etsy, Gumroad, and Google search. The best title goes first.'},
+    {id:'seo_desc',l:'Product SEO Description',e:'📝',p:'Write a full SEO-optimized product description for this digital product.\n\nSTRUCTURE:\nHOOK (first 2 sentences — this shows in search previews):\nWHAT IT IS: [clear, jargon-free explanation]\nWHO IT\'S FOR: [specific buyer persona]\nWHAT\'S INCLUDED: [bullet list of everything inside]\nKEY BENEFITS (5-7 outcome-focused bullets):\nWHO THIS IS NOT FOR: [1-2 lines — builds trust]\nFAQ (3 common questions answered):\nCTA: [strong closing sentence]\n\nOptimize naturally for search. 300-500 words. Conversational but professional.'},
+    {id:'launch_copy',l:'Product Launch Copy',e:'🚀',p:'Write a complete digital product launch content pack.\n\nLAUNCH ANNOUNCEMENT POST (IG/Facebook):\nCOUNTDOWN POST (24 hours before):\nLAUNCH DAY POST:\nLAST CHANCE POST (final hours):\n\nLAUNCH EMAIL:\nSubject:\nBody: [announcement, what it is, who it\'s for, price, link, urgency]\n\nSTORY SEQUENCE (5 frames):\nFrame 1: [tease]\nFrame 2: [problem]\nFrame 3: [solution reveal]\nFrame 4: [what\'s inside]\nFrame 5: [CTA + link]\n\nAll copy should create urgency, highlight transformation, and drive clicks.'},
+    {id:'ebook',l:'Ebook Generator',e:'📖',p:'__EBOOK__'},
+    {id:'lead_magnet',l:'Lead Magnet Creator',e:'🧲',p:'Create a complete lead magnet based on this content.\n\nLEAD MAGNET TITLE OPTIONS (5 — irresistible, specific, outcome-focused):\n\nFORMAT RECOMMENDATION: [checklist / mini ebook / swipe file / template / cheat sheet — pick best fit]\n\nFULL CONTENT OUTLINE:\n[Write the complete lead magnet content. Headers, subheaders, actual usable content — not just an outline. Make it genuinely valuable so people share it.]\n\nOPT-IN COPY:\nHeadline: [benefit-driven]\nSubheadline:\nBullet benefits (3):\nButton text:\n\nTHANK YOU PAGE COPY:\nAI IMAGE PROMPT: [mockup visual for the lead magnet]'},
+    {id:'sales_page',l:'Full Sales Page',e:'💳',p:'Write a complete sales page for this digital product.\n\nHEADLINE OPTIONS (5):\nSUBHEADLINE:\n\nHERO SECTION:\n[Pain-point opening that makes the reader feel deeply seen]\n\nAGITATION SECTION:\n[Make the problem feel urgent and costly to ignore]\n\nSOLUTION REVEAL:\n[Introduce the product as the answer]\n\nWHAT\'S INSIDE (full breakdown with descriptions):\n\nWHO THIS IS FOR:\nWHO THIS IS NOT FOR:\n\nTESTIMONIAL PLACEHOLDERS (3 — with prompts for what to fill in):\n\nFAQ (7 objections answered):\n\nPRICING SECTION COPY:\nGUARANTEE COPY:\nFINAL CTA:\nP.S. LINE:'},
+    {id:'bundle',l:'Product Bundle Ideas',e:'📦',p:'Generate 5 digital product bundle strategies based on this content.\n\nFor each bundle:\nBUNDLE NAME: [catchy, benefit-forward]\nWHAT\'S INCLUDED: [list each product]\nTARGET BUYER: [who this bundle is perfect for]\nPRICING STRATEGY: [individual prices vs bundle price vs savings amount]\nBUNDLE HOOK: [one-line selling point]\nLAUNCH COPY: [2-3 sentences to announce it]\n\nAlso include:\nUPSELL STRATEGY: [how to position the bundle as an upgrade]\nBUNDLE PAGE HEADLINE OPTIONS (3):'},
+    {id:'mockup_prompts',l:'Product Mockup Prompts',e:'🖼️',p:'Generate 10 AI image prompts for digital product mockups.\n\nFor each:\nMOCKUP [#] — [STYLE NAME]\nPROMPT: [detailed prompt for Midjourney/fal.ai/Canva AI. Include: device/medium, setting, lighting, style, color palette, mood. Make it look premium and professional. 40-60 words.]\nBEST FOR: [Etsy listing / Instagram / sales page / Pinterest]\nBACKGROUND COLOR: [hex or description]\n\nMix: laptop flatlays, phone screens, tablet mockups, printed materials, desk scenes, aesthetic backgrounds. Red/black/gold palette where possible.'},
+    {id:'faq_gen',l:'Product FAQ Generator',e:'❓',p:'Write a comprehensive FAQ section for this digital product.\n\nGenerate 15 questions and answers covering:\n- What it is and what\'s included\n- Who it\'s for and who it\'s not for\n- How to access/download/use it\n- Results and timeline expectations\n- Refund and guarantee policy\n- Technical requirements\n- Common objections\n- Comparison to alternatives\n\nWrite each answer in a warm, confident, conversational tone. Answers should be 2-4 sentences. Format as Q: / A: pairs.'},
+    {id:'thankyou',l:'Thank You Page Copy',e:'🎉',p:'Write complete thank you page copy for after someone buys this digital product.\n\nHEADLINE: [celebratory, makes them feel great about their purchase]\nSUBHEADLINE:\n\nCONFIRMATION MESSAGE: [warm welcome, what happens next, delivery info]\n\nACCESS INSTRUCTIONS: [clear step-by-step how to get/use the product]\n\nQUICK WIN TIP: [one thing they can do RIGHT NOW to start getting value]\n\nUPSELL SECTION:\nTransition line:\nUpsell offer headline:\nUpsell bullets (3):\nUpsell CTA button text:\n\nSOCIAL SHARE COPY: [ask them to share their purchase on IG/TikTok with suggested caption]\n\nCOMMUNITY INVITE: [invite to join your free group/community]'},
+  ]},
+];
+
+// ── HOME animations
+const typewriterWords=[
+  'IG Captions that stop the scroll',
+  'TikTok scripts in 60 seconds',
+  'YouTube scripts with AI research',
+  'Email campaigns that convert',
+  'Blog posts fully SEO-optimized',
+  'UGC scripts and viral hooks',
+  'Podcast episodes end-to-end',
+  'Affiliate content that sells',
+  'AI twin prompts for Kling and fal.ai',
+  'Ad copy that actually converts',
+  'Full ebooks up to 20 pages',
+  'Product sales pages from scratch',
+  'Lead magnets your audience wants',
+  'SEO product titles for Etsy and Gumroad',
+  'Digital product launch copy',
+  'ASMR scripts with trigger sequences',
+  'Short film scripts for faceless creators',
+  'Thank you pages that upsell',
+  'FAQ sections that crush objections',
+  'Product bundle ideas with pricing',
+];
+let twIdx=0,twChar=0,twDeleting=false;
+function typewrite(){
+  const el=document.getElementById('typewriter');if(!el)return;
+  const word=typewriterWords[twIdx];
+  if(!twDeleting){
+    el.textContent=word.slice(0,++twChar);
+    if(twChar===word.length){twDeleting=true;setTimeout(typewrite,1800);return;}
+  }else{
+    el.textContent=word.slice(0,--twChar);
+    if(twChar===0){twDeleting=false;twIdx=(twIdx+1)%typewriterWords.length;setTimeout(typewrite,300);return;}
+  }
+  setTimeout(typewrite,twDeleting?40:65);
+}
+
+// marquee build
+function buildMarquee(){
+  const pills=[
+    {e:'📸',l:'IG Caption'},{e:'🎬',l:'TikTok Script'},{e:'🎞️',l:'Instagram Reel'},
+    {e:'⚡',l:'7-Sec TikTok'},{e:'🪝',l:'5 Viral Hooks'},{e:'💬',l:'Video Captions'},
+    {e:'🧵',l:'Thread Post'},{e:'👥',l:'Facebook Post'},{e:'💰',l:'Ad Copy'},
+    {e:'🔥',l:'Viral Rewrite'},{e:'📧',l:'Full Email'},{e:'🎥',l:'YouTube Script'},
+    {e:'🎙️',l:'Podcast Script'},{e:'✍️',l:'Blog Post'},{e:'🌐',l:'Website Copy'},
+    {e:'📚',l:'Educational Content'},{e:'🌟',l:'AI Twin Vlog'},{e:'🤫',l:'ASMR Script'},
+    {e:'🎭',l:'Short Film Script'},{e:'🤖',l:'AI Twin Prompts'},{e:'🛍️',l:'Benable Listing'},
+    {e:'🔗',l:'Affiliate Captions'},{e:'📱',l:'UGC Scripts & Hooks'},{e:'🔍',l:'Analyze Content'},
+    {e:'📖',l:'Ebook Generator'},{e:'🏷️',l:'Product SEO Titles'},{e:'📝',l:'Product SEO Description'},
+    {e:'🚀',l:'Product Launch Copy'},{e:'🧲',l:'Lead Magnet Creator'},{e:'💳',l:'Full Sales Page'},
+    {e:'📦',l:'Product Bundle Ideas'},{e:'🖼️',l:'Mockup Prompts'},{e:'❓',l:'FAQ Generator'},
+    {e:'🎉',l:'Thank You Page'},
+  ];
+  const t1=document.getElementById('marquee1');
+  const t2=document.getElementById('marquee2');
+  if(!t1||!t2)return;
+  const mkPill=p=>{const d=document.createElement('div');d.className='marquee-pill';d.innerHTML=`<span>${p.e}</span><span>${p.l}</span>`;return d;};
+  [...pills,...pills].forEach(p=>t1.appendChild(mkPill(p)));
+  const pills2=[...pills].reverse();
+  [...pills2,...pills2].forEach(p=>t2.appendChild(mkPill(p)));
+}
+
+// particle canvas
+function initCanvas(){
+  const canvas=document.getElementById('bg-canvas');if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  let W=canvas.width=window.innerWidth,H=canvas.height=window.innerHeight;
+  window.addEventListener('resize',()=>{W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;});
+  const pts=Array.from({length:60},()=>({
+    x:Math.random()*W,y:Math.random()*H,
+    vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,
+    r:Math.random()*1.5+.5,
+    o:Math.random()*.4+.1,
+  }));
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>W)p.vx*=-1;
+      if(p.y<0||p.y>H)p.vy*=-1;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(232,20,42,${p.o})`;ctx.fill();
+    });
+    // connections
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<120){
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle=`rgba(232,20,42,${.06*(1-d/120)})`;ctx.lineWidth=.5;ctx.stroke();
+      }
+    }));
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function scrollToFeatures(){document.getElementById('features').scrollIntoView({behavior:'smooth'})}
+function scrollToHow(){document.getElementById('how').scrollIntoView({behavior:'smooth'})}
+function scrollToPricing(){document.getElementById('cta-section').scrollIntoView({behavior:'smooth'})}
+
+// ── PAGE TRANSITIONS
+function enterWorkspace(){
+  const home=document.getElementById('home');
+  const ws=document.getElementById('workspace');
+  home.style.pointerEvents='none';
+  home.classList.add('exit');
+  ws.classList.add('enter');
+  showLoginIfNeeded();
+  setTimeout(()=>{
+    home.style.display='none';
+  },750);
+}
+function exitWorkspace(){
+  document.getElementById('home').style.display='flex';
+  setTimeout(()=>{
+    document.getElementById('workspace').classList.remove('enter');
+    document.getElementById('home').classList.remove('exit');
+  },50);
+  setTimeout(()=>document.getElementById('home').scrollTo({top:0,behavior:'smooth'}),100);
+}
+
+// ── WORKSPACE THEME
+function applyWsTheme(){
+  document.documentElement.setAttribute('data-ws-theme',wsTheme);
+  document.getElementById('tt-dark').className='tt-opt'+(wsTheme==='dark'?' active':'');
+  document.getElementById('tt-light').className='tt-opt'+(wsTheme==='light'?' active':'');
+}
+function toggleTheme(){wsTheme=wsTheme==='dark'?'light':'dark';localStorage.setItem('cd_wstheme',wsTheme);applyWsTheme();}
+
+// ── PERSISTENCE
+function saveState(){
+  try{localStorage.setItem('cd_board',JSON.stringify({cards:cards.map(c=>({...c,sel:false})),savedItems,panOff}));}catch(e){}
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem('cd_board');if(!raw)return false;
+    const d=JSON.parse(raw);
+    if(d.cards&&d.cards.length){cards=d.cards;cards.forEach(c=>renderCard(c));}
+    if(d.savedItems)savedItems=d.savedItems;
+    if(d.panOff){panOff=d.panOff;document.getElementById('board').style.transform=`translate(${panOff.x}px,${panOff.y}px)`;}
+    return d.cards&&d.cards.length>0;
+  }catch(e){return false;}
+}
+
+// ── API HELPER
+async function callClaude(body){
+  if(!apiKey||apiKey==='none'){
+    showToast('paste your API key in Settings first ⚙','#E8142A');
+    throw new Error('no API key');
+  }
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key':apiKey,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify(body)
+  });
+  const text=await r.text();
+  if(!text||!text.trim()){
+    throw new Error(`empty response from server (status ${r.status}) — check your API key in Settings`);
+  }
+  let data;
+  try{data=JSON.parse(text);}
+  catch(e){throw new Error(`server returned non-JSON: ${text.slice(0,120)}`);}
+  if(data.error){throw new Error(data.error.message||JSON.stringify(data.error));}
+  return data;
+}
+
+// ── LOGIN OVERLAY
+function loginActivate(){
+  const v=document.getElementById('login-key-input').value.trim();
+  if(!v){
+    const inp=document.getElementById('login-key-input');
+    inp.style.borderColor='var(--red)';inp.style.boxShadow='0 0 0 3px rgba(232,20,42,0.3)';
+    inp.placeholder='paste your API key first ↑';
+    setTimeout(()=>{inp.style.borderColor='';inp.style.boxShadow='';inp.placeholder='sk-ant-api03-...';},2200);
+    return;
+  }
+  apiKey=v;localStorage.setItem('cd_ak',v);
+  document.getElementById('s-key').value=v;
+  const ov=document.getElementById('login-overlay');
+  ov.classList.add('hide');
+  setTimeout(()=>ov.style.display='none',650);
+}
+function showLoginIfNeeded(){
+  const ov=document.getElementById('login-overlay');
+  if(!ov)return;
+  if(apiKey){ov.style.display='none';}
+  else{ov.style.display='flex';}
+}
+
+// ── API KEY
+function saveKey(){
+  const v=document.getElementById('key-input').value.trim();if(!v)return;
+  apiKey=v;localStorage.setItem('cd_ak',v);
+}
+function saveSettings(){
+  const k=document.getElementById('s-key').value.trim();
+  const s=document.getElementById('s-supa').value.trim();
+  if(k){apiKey=k;localStorage.setItem('cd_ak',k);}
+  if(s){supaKey=s;localStorage.setItem('cd_sk',s);}
+  closeSettings();
+}
+function openSettings(){document.getElementById('settings-modal').style.display='flex';}
+function closeSettings(){document.getElementById('settings-modal').style.display='none';}
+function restoreBrandCard(){
+  const n=cards.length;
+  addCard({type:'brand',title:'My Brand Reference',content:`brand name: [your brand name]\nniche: [your niche]\ncontent voice: [your tone]\ntarget audience: [who you create for]\noffers/products: [what you sell]\ncontent goals: [grow / sell / community]\nplatforms: [IG / TikTok / YouTube / etc]`,x:28+(n%4)*285,y:80,w:270});
+  showToast('◆ brand reference card restored!','#D4AF37');
+}
+
+// ── EBOOK MODAL
+function openEbookModal(){
+  if(!selIds.size){alert('select some cards on the board first so Nova knows what your ebook is about!');return;}
+  document.getElementById('ebook-modal').style.display='flex';
+}
+function closeEbookModal(){document.getElementById('ebook-modal').style.display='none';}
+async function generateEbook(){
+  closeEbookModal();
+  const pages=ebookPages;
+  const ot={id:'ebook',l:`Ebook (${pages} pages)`,e:'📖'};
+  const p=`Write a complete ${pages}-page ebook based on the board content.\n\nEBOOK TITLE OPTIONS (3 — compelling, keyword-rich):\n\nSUBTITLE:\n\nAUTHOR BIO PLACEHOLDER:\n\nTABLE OF CONTENTS: [list all ${pages} pages with titles]\n\nINTRODUCTION: [hook, who this is for, what they'll learn, how to use this ebook]\n\n${Array.from({length:pages},(_,i)=>`PAGE ${i+1}: [TITLE]\n[Write 200-300 words of full content for this page. Include: main concept, explanation, examples, actionable tip. Make it genuinely valuable and educational. No fluff.]`).join('\n\n')}\n\nCONCLUSION: [recap key lessons, next steps, CTA to your product/community]\n\nBONUS RESOURCES: [3-5 tools, links, or additional tips]\n\nWrite in a warm, conversational, expert voice. Short paragraphs. No walls of text. ADHD-friendly throughout.`;
+  ot.p=p;
+  await generate(ot);
+}
+
+// ── CARDS
+function addCard({type,title,content,x,y,w}){
+  const id=uid();
+  const c={id,type,title:title||'Untitled',content:content||'',x:x||80,y:y||80,w:w||260,sel:false};
+  cards.push(c);renderCard(c);updateStatus();saveState();return id;
+}
+
+function renderCard(c){
+  const cfg=CFG[c.type]||CFG.note;
+  const el=document.createElement('div');
+  el.className='card'+(c.sel?' selected':'');
+  el.id='card-'+c.id;
+  el.style.left=c.x+'px';
+  el.style.top=c.y+'px';
+  el.style.width=c.w+'px';
+  el.style.setProperty('--sel-col',cfg.a);
+  if(c.sel){el.style.boxShadow=`0 0 0 2px ${cfg.a},0 4px 24px rgba(0,0,0,0.5)`;el.style.borderColor=cfg.a;}
+  el.innerHTML=`
+    <div class="card-strip" style="background:${cfg.strip}"></div>
+    <div class="card-hdr">
+      <span class="card-tag" style="background:${cfg.tBg};color:${cfg.tC}">${cfg.tag}</span>
+      <div class="card-acts">
+        <button class="card-act" id="edit-btn-${c.id}">edit</button>
+        <button class="card-del" id="del-btn-${c.id}">×</button>
+      </div>
+    </div>
+    <div class="card-ttl-wrap"><div class="card-ttl" id="t-${c.id}">${esc(c.title)}</div></div>
+    <div class="card-body${c.content?'':' empty'}" id="b-${c.id}">${c.content?esc(c.content):'empty — click edit to add'}</div>
+    <div class="card-resize" id="resize-${c.id}"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M7 1L1 7M7 4L4 7" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+  `;
+  document.getElementById('board').appendChild(el);
+
+  // wire up buttons AFTER appending so getElementById works
+  document.getElementById('edit-btn-'+c.id).addEventListener('click',e=>{e.stopPropagation();startEdit(c.id,e);});
+  document.getElementById('del-btn-'+c.id).addEventListener('click',e=>{e.stopPropagation();delCard(c.id,e);});
+  document.getElementById('resize-'+c.id).addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();startResize(e,c.id);});
+
+  // pointer events for drag + click-to-select
+  let pdx=0,pdy=0,pdown=false,pmoved=false;
+  el.addEventListener('pointerdown',e=>{
+    if(e.target.closest('.card-act,.card-del,.card-resize'))return;
+    if(editId===c.id)return;
+    e.preventDefault();
+    pdown=true;pmoved=false;
+    pdx=e.clientX;pdy=e.clientY;
+    const card=cards.find(x=>x.id===c.id);if(!card)return;
+    drag={id:c.id,sx:e.clientX,sy:e.clientY,cx:card.x,cy:card.y,shiftKey:e.shiftKey};
+    el.setPointerCapture(e.pointerId);
+    el.style.zIndex=50;
+  });
+  el.addEventListener('pointermove',e=>{
+    if(!pdown||!drag||drag.id!==c.id)return;
+    const dx=e.clientX-pdx,dy=e.clientY-pdy;
+    if(!pmoved&&(Math.abs(dx)>5||Math.abs(dy)>5))pmoved=true;
+    if(pmoved){
+      const card=cards.find(x=>x.id===c.id);if(!card)return;
+      card.x=drag.cx+(e.clientX-drag.sx);
+      card.y=drag.cy+(e.clientY-drag.sy);
+      el.style.left=card.x+'px';
+      el.style.top=card.y+'px';
+    }
+  });
+  el.addEventListener('pointerup',e=>{
+    if(!pdown)return;
+    pdown=false;
+    el.style.zIndex='';
+    if(!pmoved){
+      // it was a tap/click — select this card
+      doSelect(c.id,e.shiftKey);
+    } else {
+      saveState();
+    }
+    drag=null;
+  });
+}
+
+function doSelect(id,shiftKey){
+  if(editId===id)return;
+  if(!shiftKey){
+    selIds.forEach(sid=>{const c=cards.find(x=>x.id===sid);if(c){c.sel=false;refreshSelStyle(sid);}});
+    selIds.clear();
+  }
+  const card=cards.find(c=>c.id===id);if(!card)return;
+  if(selIds.has(id)){selIds.delete(id);card.sel=false;}
+  else{selIds.add(id);card.sel=true;}
+  refreshSelStyle(id);
+  updateStatus();
+  closeDrawer();
+}
+
+function refreshSelStyle(id){
+  const c=cards.find(x=>x.id===id),el=document.getElementById('card-'+id);
+  if(!el||!c)return;
+  const cfg=CFG[c.type]||CFG.note;
+  el.className='card'+(c.sel?' selected':'');
+  el.style.boxShadow=c.sel?`0 0 0 2px ${cfg.a},0 4px 24px rgba(0,0,0,0.5)`:'';
+  el.style.borderColor=c.sel?cfg.a:'';
+}
+
+function refreshCard(id){document.getElementById('card-'+id)?.remove();const c=cards.find(x=>x.id===id);if(c)renderCard(c);}
+
+// ── TOUCH SUPPORT (handled by pointer events above — nothing extra needed)
+function addTouchDrag(){}  // kept for compat, no-op now
+
+// ── PANEL TOGGLE (mobile)
+let panelOpen=false;
+function togglePanel(){
+  panelOpen=!panelOpen;
+  const inner=document.getElementById('panel-inner');
+  const arrow=document.getElementById('panel-arrow');
+  if(inner){inner.className=panelOpen?'open':'';}
+  if(arrow){arrow.className='panel-toggle-arrow'+(panelOpen?' open':'');}
+}
+function delCard(id,e){
+  e.stopPropagation();
+  const c=cards.find(x=>x.id===id);
+  if(!c)return;
+  // store for undo
+  window._lastDeleted=JSON.parse(JSON.stringify(c));
+  cards=cards.filter(x=>x.id!==id);
+  selIds.delete(id);
+  document.getElementById('card-'+id)?.remove();
+  updateStatus();saveState();
+  // show undo toast
+  const t=document.getElementById('toast');
+  t.innerHTML=`card deleted &nbsp;<button onclick="undoDelete()" style="background:var(--red);border:none;color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;cursor:pointer;margin-left:4px">undo</button>`;
+  t.style.borderColor='rgba(255,255,255,0.2)';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.classList.remove('show');t.innerHTML='';window._lastDeleted=null;},5000);
+}
+
+function undoDelete(){
+  if(!window._lastDeleted)return;
+  const c=window._lastDeleted;
+  c.sel=false;
+  cards.push(c);
+  renderCard(c);
+  saveState();
+  window._lastDeleted=null;
+  const t=document.getElementById('toast');
+  t.innerHTML='card restored ✓';
+  t.style.borderColor='#22c55e';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.classList.remove('show');t.innerHTML='';},2000);
+}
+function startEdit(id,e){
+  e.stopPropagation();editId=id;
+  const c=cards.find(x=>x.id===id);if(!c)return;
+  document.getElementById('t-'+id).innerHTML=`<input value="${esc(c.title)}" onchange="cards.find(x=>x.id==='${id}').title=this.value" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:#fff;font-size:12px;font-weight:600;padding:4px 7px;font-family:inherit;outline:none"/>`;
+  document.getElementById('b-'+id).innerHTML=`<textarea rows="5" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="cards.find(x=>x.id==='${id}').content=this.value" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:rgba(255,255,255,0.6);font-size:11px;padding:5px 7px;font-family:var(--mono);outline:none;resize:vertical;line-height:1.7;min-height:80px">${esc(c.content)}</textarea>`;
+  document.getElementById('b-'+id).className='card-body';
+  const eb=document.querySelector(`#card-${id} .card-act`);
+  if(eb){eb.textContent='done';eb.style.color='#22c55e';eb.onclick=ev=>stopEdit(id,ev);}
+}
+function stopEdit(id,e){
+  e.stopPropagation();editId=null;
+  const ti=document.querySelector(`#t-${id} input`),ta=document.querySelector(`#b-${id} textarea`);
+  const c=cards.find(x=>x.id===id);
+  if(c){if(ti)c.title=ti.value;if(ta)c.content=ta.value;}
+  refreshCard(id);saveState();
+}
+function toggleSel(e,id){doSelect(id,e&&e.shiftKey);}
+function rSel(id){refreshSelStyle(id);}
+
+// ── DRAG, RESIZE, PAN
+function startDrag(e,id){} // no-op — handled by pointer events in renderCard
+function startResize(e,id){e.stopPropagation();e.preventDefault();const c=cards.find(x=>x.id===id);if(!c)return;resize={id,sx:e.clientX,sw:c.w};}
+document.addEventListener('mousemove',e=>{
+  if(resize){const c=cards.find(x=>x.id===resize.id);if(c){c.w=Math.max(200,resize.sw+(e.clientX-resize.sx));const el=document.getElementById('card-'+resize.id);if(el)el.style.width=c.w+'px';}}
+  if(pan){panOff.x=pan.ox+(e.clientX-pan.sx);panOff.y=pan.oy+(e.clientY-pan.sy);document.getElementById('board').style.transform=`translate(${panOff.x}px,${panOff.y}px)`;}
+});
+document.addEventListener('mouseup',()=>{
+  if(resize)saveState();
+  if(pan)saveState();
+  resize=null;pan=null;
+});
+function canvasDown(e){
+  e.preventDefault();
+  if(e.target.id!=='canvas'&&e.target.id!=='board')return;
+  selIds.forEach(id=>{const c=cards.find(x=>x.id===id);if(c){c.sel=false;refreshSelStyle(id);}});
+  selIds.clear();updateStatus();closeDrawer();
+  pan={sx:e.clientX,sy:e.clientY,ox:panOff.x,oy:panOff.y};
+}
+function canvasTouchStart(e){
+  if(e.target.id!=='canvas'&&e.target.id!=='board')return;
+  const t=e.touches[0];
+  pan={sx:t.clientX,sy:t.clientY,ox:panOff.x,oy:panOff.y};
+}
+function canvasTouchMove(e){
+  if(!pan)return;e.preventDefault();
+  const t=e.touches[0];
+  panOff.x=pan.ox+(t.clientX-pan.sx);panOff.y=pan.oy+(t.clientY-pan.sy);
+  document.getElementById('board').style.transform=`translate(${panOff.x}px,${panOff.y}px)`;
+}
+function canvasTouchEnd(){pan=null;saveState();}
+
+// ── MODAL
+function openModal(type){
+  curModal=type;const cfg=CFG[type]||CFG.note;
+  const el=document.getElementById('m-title');el.textContent=`Add ${cfg.tag} Card`;el.style.setProperty('--m-col',cfg.a);
+  const defs={youtube:'YouTube Video',url:'Website / Article',note:'New Note',brand:'Brand Reference',pdf:'PDF Document',image:'Image Reference'};
+  document.getElementById('m-card-title').value=defs[type]||'Untitled';
+  document.getElementById('m-card-content').value='';
+  const phs={youtube:'transcript loads here automatically...',url:'paste URL or describe the article...',brand:'brand guidelines, tone, offer details...',pdf:'extracted content appears here...',image:'AI image analysis appears here...',note:'your content, ideas, research...'};
+  document.getElementById('m-card-content').placeholder=phs[type]||'add content here...';
+  ['yt-sec','pdf-sec','img-sec'].forEach(id=>document.getElementById(id).style.display='none');
+  if(type==='youtube')document.getElementById('yt-sec').style.display='block';
+  if(type==='pdf')document.getElementById('pdf-sec').style.display='block';
+  if(type==='image')document.getElementById('img-sec').style.display='block';
+  document.getElementById('yt-url').value='';document.getElementById('yt-st').textContent='';document.getElementById('yt-btn').disabled=true;
+  document.getElementById('pdf-st').textContent='';document.getElementById('img-st').textContent='';
+  document.getElementById('img-dz-inner').innerHTML='<div class="dz-icon">🖼️</div><div class="dz-txt">Click to upload image</div><div class="dz-sub">AI will analyze it</div>';
+  document.getElementById('card-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('m-card-title').focus(),50);
+}
+function closeModal(){document.getElementById('card-modal').style.display='none';curModal=null;}
+function confirmAdd(){
+  const title=document.getElementById('m-card-title').value.trim()||'Untitled';
+  const content=document.getElementById('m-card-content').value;
+  const n=cards.length;const col=n%3;const row=Math.floor(n/3);addCard({type:curModal,title,content,x:20+col*290,y:20+row*200,w:260});closeModal();
+}
+
+// ── YT TRANSCRIPT
+async function fetchTx(){
+  const url=document.getElementById('yt-url').value.trim();if(!url)return;
+  if(!supaKey){setSt('yt-st','⚠ add Supadata key in Settings','#f97316');return;}
+  setSt('yt-st','Fetching...','#D4AF37');document.getElementById('yt-btn').disabled=true;
+  try{
+    const t=`https://api.supadata.ai/v1/youtube/transcript?url=${encodeURIComponent(url)}&text=true`;
+    const r=await fetch(`https://corsproxy.io/?${encodeURIComponent(t)}`,{headers:{'x-api-key':supaKey}});
+    const d=await r.json();
+    const tx=d?.content?(typeof d.content==='string'?d.content:d.content.map(c=>c.text).join(' ')):null;
+    if(tx){document.getElementById('m-card-content').value=`URL: ${url}\n\n--- TRANSCRIPT ---\n${tx}`;setSt('yt-st','✓ transcript loaded','#22c55e');}
+    else setSt('yt-st',`⚠ ${d?.message||'no transcript found'}`,'#E8142A');
+  }catch(err){setSt('yt-st',`⚠ ${err.message}`,'#E8142A');}
+  finally{document.getElementById('yt-btn').disabled=false;}
+}
+
+// ── PDF
+async function handlePdf(e){
+  const file=e.target.files?.[0];if(!file)return;
+  document.getElementById('m-card-title').value=file.name.replace('.pdf','');
+  setSt('pdf-st','Reading PDF...','#D4AF37');
+  if(!apiKey){setSt('pdf-st','⚠ add API key first','#E8142A');return;}
+  try{
+    const b64=await toB64(file);
+    const d=await callClaude({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:[{type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},{type:'text',text:'Extract and summarize all key content from this PDF. Return the full text, main points, and important insights.'}]}]});
+    document.getElementById('m-card-content').value=`PDF: ${file.name}\n\n--- EXTRACTED CONTENT ---\n${d.content?.find(b=>b.type==='text')?.text||'could not extract'}`;
+    setSt('pdf-st','✓ extracted','#22c55e');
+  }catch(err){setSt('pdf-st',`⚠ ${err.message}`,'#E8142A');}
+}
+
+// ── IMAGE
+async function handleImg(e){
+  const file=e.target.files?.[0];if(!file)return;
+  document.getElementById('m-card-title').value=file.name.replace(/\.[^.]+$/,'');
+  setSt('img-st','Analyzing...','#D4AF37');
+  if(!apiKey){setSt('img-st','⚠ add API key first','#E8142A');return;}
+  try{
+    const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{document.getElementById('img-dz-inner').innerHTML=`<img src="${fr.result}" style="width:100%;max-height:120px;object-fit:cover;display:block;border-radius:6px"/>`;res(fr.result.split(',')[1]);};fr.onerror=()=>rej(new Error('failed'));fr.readAsDataURL(file);});
+    const d=await callClaude({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},{type:'text',text:"Describe this image in detail for content creation. Include: what's shown, mood/aesthetic, colors, style, visible text, and how it could be used for social media or marketing."}]}]});
+    document.getElementById('m-card-content').value=`IMAGE: ${file.name}\n\n--- AI ANALYSIS ---\n${d.content?.find(b=>b.type==='text')?.text||'could not analyze'}`;
+    setSt('img-st','✓ analyzed','#22c55e');
+  }catch(err){setSt('img-st',`⚠ ${err.message}`,'#E8142A');}
+}
+
+// ── GEN LIST
+function buildGenList(){
+  const list=document.getElementById('gen-list');list.innerHTML='';
+  GEN_GROUPS.forEach((grp,gi)=>{
+    if(gi>0){const d=document.createElement('div');d.className='gen-div';list.appendChild(d);}
+    const l=document.createElement('div');l.className='gen-group-lbl';l.textContent=grp.label;list.appendChild(l);
+    grp.items.forEach(ot=>{
+      const btn=document.createElement('button');btn.className='gen-btn';btn.id='g-'+ot.id;
+      if(ot.id==='ebook'){
+        btn.innerHTML=`<span>${ot.e}</span><span>${ot.l}</span><span style="font-size:9px;font-family:var(--mono);color:rgba(255,255,255,0.25);margin-left:auto;flex-shrink:0">pick pages</span>`;
+        btn.onclick=()=>openEbookModal();
+      } else {
+        btn.innerHTML=`<span>${ot.e}</span><span>${ot.l}</span>`;
+        btn.onclick=()=>generate(ot);
+      }
+      list.appendChild(btn);
+    });
+  });
+}
+function setGenBtns(on){GEN_GROUPS.forEach(g=>g.items.forEach(ot=>{const b=document.getElementById('g-'+ot.id);if(b){b.className='gen-btn on';}}));}
+
+// ── GENERATE
+async function generate(ot){
+  if(generating)return;
+  if(!apiKey){showToast('paste your API key in Settings first ⚙','#E8142A');return;}
+  if(!selIds.size){showToast('click a card on the board to select it first 👆','#D4AF37');return;}
+  generating=true;setGenBtns(false);
+  const btn=document.getElementById('g-'+ot.id);
+  if(btn){btn.className='gen-btn running';btn.innerHTML=`<span class="blink">⏳</span><span>Generating...</span>`;}
+  const sel=cards.filter(c=>selIds.has(c.id));
+  const ctx=sel.map(c=>`[${(CFG[c.type]||CFG.note).tag}: ${c.title}]\n${c.content}`).join('\n\n---\n\n');
+  const isEbook=ot.id==='ebook';
+  try{
+    const d=await callClaude({model:'claude-sonnet-4-20250514',max_tokens:isEbook?4000:2000,system:SYS,messages:[{role:'user',content:`Board content:\n\n${ctx}\n\n---\n\n${ot.p}`}]});
+    const text=d.content?.find(b=>b.type==='text')?.text||(d.error?.message||'generation failed — try again');
+    curOut={ot,text};showDrawer(ot,text);
+    const n=cards.length;addCard({type:'output',title:`${ot.e} ${ot.l}`,content:text,x:28+(n%4)*295,y:520,w:280});
+  }catch(err){curOut={ot,text:`error: ${err.message}`};showDrawer(ot,`error: ${err.message}`);}
+  finally{
+    generating=false;
+    if(btn){btn.className='gen-btn on';btn.innerHTML=`<span>${ot.e}</span><span>${ot.l}</span>`;}
+    setGenBtns(true);
+  }
+}
+
+// ── DRAWER
+function showDrawer(ot,text){
+  document.getElementById('d-label').textContent=ot.l;
+  document.getElementById('d-body').textContent=text;
+  document.getElementById('drawer').style.display='flex';
+  document.getElementById('save-btn').className='d-btn';document.getElementById('save-btn').textContent='Save';
+  document.getElementById('copy-btn').className='d-btn';document.getElementById('copy-btn').textContent='Copy';
+  const canvaBtn=document.getElementById('canva-btn');
+  if(ot.id==='ebook'){
+    canvaBtn.style.display='flex';
+  } else {
+    canvaBtn.style.display='none';
+  }
+}
+function closeDrawer(){document.getElementById('drawer').style.display='none';curOut=null;}
+function copyOutput(){if(!curOut)return;navigator.clipboard?.writeText(curOut.text);const b=document.getElementById('copy-btn');b.className='d-btn copied';b.textContent='Copied!';setTimeout(()=>{b.className='d-btn';b.textContent='Copy';},1800);}
+function saveOutput(){
+  if(!curOut)return;
+  savedItems.unshift({id:uid(),label:curOut.ot.l,emoji:curOut.ot.e,text:curOut.text,savedAt:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})});
+  updateBadge();saveState();
+  const b=document.getElementById('save-btn');b.className='d-btn saved';b.textContent='Saved ✦';
+  setTimeout(()=>{b.className='d-btn';b.textContent='Save';},1800);
+}
+
+// ── LIBRARY
+function updateBadge(){const b=document.getElementById('saved-badge');if(savedItems.length){b.textContent=savedItems.length;b.style.display='inline';}else b.style.display='none';}
+function openLib(){document.getElementById('lib-modal').style.display='flex';document.getElementById('lib-count').textContent=`${savedItems.length} item${savedItems.length!==1?'s':''}`;renderLib();}
+function closeLib(){document.getElementById('lib-modal').style.display='none';}
+function renderLib(){
+  const s=document.getElementById('lib-scroll');
+  if(!savedItems.length){s.innerHTML='<div class="lib-empty">Nothing saved yet — generate content and hit Save 👑</div>';return;}
+  s.innerHTML=savedItems.map(item=>`<div class="lib-item"><div class="lib-irow"><span style="font-size:14px">${item.emoji}</span><span class="lib-lbl">${item.label}</span><span class="lib-date">${item.savedAt}</span></div><div class="lib-txt">${esc(item.text)}</div><div class="lib-btns"><button class="lb" id="lc-${item.id}" onclick="copyLib('${item.id}')">Copy</button><button class="lb del" onclick="delLib('${item.id}')">Delete</button></div></div>`).join('');
+}
+function copyLib(id){const item=savedItems.find(x=>x.id===id);if(!item)return;navigator.clipboard?.writeText(item.text);const b=document.getElementById('lc-'+id);if(b){b.className='lb copied';b.textContent='Copied!';setTimeout(()=>{b.className='lb';b.textContent='Copy';},1800);}}
+function delLib(id){savedItems=savedItems.filter(x=>x.id!==id);updateBadge();saveState();document.getElementById('lib-count').textContent=`${savedItems.length} item${savedItems.length!==1?'s':''}`;renderLib();}
+
+// ── STATUS
+function updateStatus(){
+  const n=selIds.size;
+  document.getElementById('ws-status-txt').textContent=n>0?`${n} card${n>1?'s':''} selected`:'Click cards to select';
+  document.getElementById('p-hint').textContent=n===0?'Select cards first':`${n} card${n>1?'s':''} selected ✓`;
+  document.getElementById('p-hint').className='p-hint'+(n>0?' sel':'');
+  setGenBtns(n>0&&!generating);
+}
+
+// ── HELPERS
+function setSt(id,msg,color){const el=document.getElementById(id);if(el){el.textContent=msg;el.style.color=color;}}
+let toastTimer=null;
+function showToast(msg,color){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.borderColor=color||'rgba(255,255,255,0.15)';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ── GUIDE
+function openGuide(){document.getElementById('guide-overlay').classList.add('open');closeHelp();}
+function closeGuide(){document.getElementById('guide-overlay').classList.remove('open');}
+
+// ── HELP CHATBOT
+const HELP_SYS=`You are a friendly, simple helper for ContentDrop — an AI content creation workspace. Your job is to help users understand how to use it. Speak like you're explaining to a grandparent or a 3rd grader — super simple, warm, no jargon. Short sentences. Use emojis. Be encouraging.
+
+ContentDrop basics:
+- It's a tool that creates content for you using AI (Claude)
+- Users need a free Anthropic API key from console.anthropic.com to use it
+- The BOARD is the main area where you put cards (your content sources)
+- CARDS are sticky notes you add by clicking buttons at the top: + Note, + YouTube, + URL, + Reference, + PDF, + Image
+- To SELECT a card, just click it — it glows red when selected
+- After selecting cards, pick a GENERATE TYPE from the right panel
+- Generated content appears at the bottom in a DRAWER — copy it or save it
+- LIBRARY saves all your generated content — click "Library" in the top bar
+- SETTINGS is where you enter your API key — click ⚙
+
+If someone asks what an API key is: it's like a password that lets you use the AI. It's free to get at console.anthropic.com. New accounts get $5 free credit which is about 1,500+ uses.
+
+Always end with encouragement. If they seem confused, offer to walk them through step by step.`;
+
+let helpMsgs=[{role:'assistant',content:"hey! 👋 i'm your ContentDrop helper. ask me anything about how to use this tool — no question is too basic!"}];
+let helpGenerating=false;
+
+function toggleHelp(){
+  const panel=document.getElementById('help-panel');
+  const btn=document.getElementById('help-btn');
+  const isOpen=panel.classList.contains('open');
+  if(isOpen){closeHelp();}
+  else{panel.classList.add('open');btn.classList.add('open');btn.textContent='×';}
+}
+function closeHelp(){
+  document.getElementById('help-panel').classList.remove('open');
+  const btn=document.getElementById('help-btn');btn.classList.remove('open');btn.textContent='?';
+}
+
+function addHelpMsg(text,role){
+  const msgs=document.getElementById('help-msgs');
+  const div=document.createElement('div');
+  div.className=`help-msg ${role}`;div.textContent=text;
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+  return div;
+}
+
+function askHelp(q){
+  document.getElementById('help-chips').style.display='none';
+  sendHelpMsg(q);
+}
+
+function sendHelp(){
+  const inp=document.getElementById('help-input');
+  const q=inp.value.trim();if(!q||helpGenerating)return;
+  inp.value='';sendHelpMsg(q);
+}
+
+async function sendHelpMsg(q){
+  if(helpGenerating)return;
+  document.getElementById('help-chips').style.display='none';
+  addHelpMsg(q,'user');
+  helpMsgs.push({role:'user',content:q});
+  helpGenerating=true;
+  const typingEl=addHelpMsg('typing...','bot typing');
+  try{
+    const d=await callClaude({model:'claude-sonnet-4-20250514',max_tokens:400,system:HELP_SYS,messages:helpMsgs.filter(m=>m.role!=='assistant'||m.content!=='typing...')});
+    const reply=d.content?.find(b=>b.type==='text')?.text||"hmm i'm not sure about that one! try checking the quick guide 📖";
+    typingEl.textContent=reply;typingEl.classList.remove('typing');
+    helpMsgs.push({role:'assistant',content:reply});
+  }catch(err){
+    typingEl.textContent=`oops! ${err.message}`;
+    typingEl.classList.remove('typing');
+  }finally{helpGenerating=false;}
+}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toB64(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(',')[1]);fr.onerror=()=>rej(new Error('failed'));fr.readAsDataURL(file);});}
+
+// ── INIT
+function init(){
+  initCanvas();
+  buildMarquee();
+  setTimeout(typewrite,800);
+  applyWsTheme();
+  showLoginIfNeeded();
+  if(apiKey){document.getElementById('s-key').value=apiKey;}
+  if(supaKey)document.getElementById('s-supa').value=supaKey;
+  const restored=loadState();
+  if(!restored){
+    addCard({type:'brand',title:'My Brand Reference',content:`brand name: [your brand name]\nniche: [your niche]\ncontent voice: [your tone]\ntarget audience: [who you create for]\noffers/products: [what you sell]\ncontent goals: [grow / sell / community]\nplatforms: [IG / TikTok / YouTube / etc]`,x:28,y:28,w:258});
+    addCard({type:'note',title:'Welcome to ContentDrop 👑',content:`how to use:\n1. add cards from the toolbar above\n2. click a card to select it\n   (shift+click to select multiple)\n3. choose a generate type →\n4. copy, save, post ✨\n\ntip: drag cards anywhere\ntip: drag bottom-right corner to resize\ntip: click empty space to pan`,x:310,y:28,w:255});
+  }
+  updateBadge();buildGenList();updateStatus();
+  if(!localStorage.getItem('cd_visited')){
+    localStorage.setItem('cd_visited','1');
+    setTimeout(()=>openGuide(),1200);
+  }
+}
+init();
+</script>
+</body>
+</html>
