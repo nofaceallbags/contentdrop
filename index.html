@@ -475,7 +475,7 @@ button,input,textarea{font-family:var(--font)}
 .card-ttl{font-size:12px;font-weight:600;color:var(--white);line-height:1.4;word-break:break-word}
 .card-ttl input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:var(--white);font-size:12px;font-weight:600;padding:4px 7px;font-family:var(--font);outline:none}
 .card-ttl input:focus{border-color:var(--red)}
-.card-body{padding:3px 12px 10px;font-size:11px;color:rgba(255,255,255,0.4);line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:160px;overflow-y:auto;font-family:var(--mono)}
+.card-body{padding:3px 12px 10px;font-size:11px;color:rgba(255,255,255,0.4);line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:160px;overflow-y:auto;font-family:var(--mono);touch-action:pan-y;overscroll-behavior:contain;}
 .card-body.empty{color:rgba(255,255,255,0.2);font-style:italic;font-family:var(--font)}
 .card-body textarea{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:rgba(255,255,255,0.6);font-size:11px;padding:5px 7px;font-family:var(--mono);outline:none;resize:vertical;line-height:1.7;min-height:80px}
 .card-body textarea:focus{border-color:var(--red)}
@@ -488,7 +488,7 @@ button,input,textarea{font-family:var(--font)}
 .p-heading{font-size:9px;font-weight:600;font-family:var(--mono);letter-spacing:1.5px;color:rgba(255,255,255,0.25);margin-bottom:5px;text-transform:uppercase}
 .p-hint{font-size:11px;color:rgba(255,255,255,0.3);line-height:1.5}
 .p-hint.sel{color:rgba(255,255,255,0.6)}
-.p-scroll{flex:1;overflow-y:auto;padding:6px}
+.p-scroll{flex:1;overflow-y:auto;padding:6px;touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 .gen-group-lbl{font-size:9px;font-weight:600;font-family:var(--mono);letter-spacing:1px;color:rgba(255,255,255,0.2);padding:10px 10px 4px;text-transform:uppercase}
 .gen-div{height:1px;background:rgba(255,255,255,0.06);margin:6px 10px}
 #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:#1a1a1c;border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:13px;font-weight:500;padding:11px 22px;border-radius:30px;z-index:9999;opacity:0;transition:all .3s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
@@ -510,7 +510,7 @@ button,input,textarea{font-family:var(--font)}
 .d-btn.copied{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.3);color:#22c55e}
 .d-close{background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);font-size:15px;width:28px;height:28px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .d-close:hover{background:rgba(255,255,255,0.06);color:var(--white)}
-.d-body{padding:16px 20px 20px;overflow-y:auto;flex:1;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.85;white-space:pre-wrap;word-break:break-word;font-family:var(--mono)}
+.d-body{padding:16px 20px 20px;overflow-y:auto;flex:1;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.85;white-space:pre-wrap;word-break:break-word;font-family:var(--mono);touch-action:pan-y;-webkit-overflow-scrolling:touch;}
 
 /* overlays */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100}
@@ -550,7 +550,7 @@ button,input,textarea{font-family:var(--font)}
 .lib-hdr{padding:18px 22px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;flex-shrink:0}
 .lib-title{font-size:13px;font-weight:600;color:var(--white)}
 .lib-count{font-size:11px;color:rgba(255,255,255,0.3);font-family:var(--mono)}
-.lib-scroll{overflow-y:auto;flex:1;padding:14px}
+.lib-scroll{overflow-y:auto;flex:1;padding:14px;touch-action:pan-y;-webkit-overflow-scrolling:touch;}
 .lib-item{background:var(--black3);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;margin-bottom:10px}
 .lib-item:hover{border-color:rgba(255,255,255,0.12)}
 .lib-irow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -642,7 +642,7 @@ button,input,textarea{font-family:var(--font)}
   .panel-toggle-label{font-size:11px;font-weight:600;font-family:var(--mono);letter-spacing:1px;color:rgba(255,255,255,0.4);text-transform:uppercase}
   .panel-toggle-arrow{font-size:14px;color:rgba(255,255,255,0.3);transition:transform .2s}
   .panel-toggle-arrow.open{transform:rotate(180deg)}
-  #panel-inner{display:none;flex-direction:column;flex:1;overflow:hidden}
+  #panel-inner{display:none;flex-direction:column;flex:1;overflow:hidden;touch-action:pan-y;}
   #panel-inner.open{display:flex}
   .p-scroll{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:6px}
   .gen-group-lbl{grid-column:1/-1}
@@ -1586,7 +1586,7 @@ function renderCard(c){
   // pointer events for drag + click-to-select
   let pdx=0,pdy=0,pdown=false,pmoved=false;
   el.addEventListener('pointerdown',e=>{
-    if(e.target.closest('.card-act,.card-del,.card-resize'))return;
+    if(e.target.closest('.card-act,.card-del,.card-resize,.card-body,.card-body textarea'))return;
     if(editId===c.id)return;
     e.preventDefault();
     pdown=true;pmoved=false;
