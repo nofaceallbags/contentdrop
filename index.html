@@ -2066,5 +2066,13 @@ function init(){
 }
 init();
 </script>
+
+<style>
+/* SCROLL FIX - highest specificity override */
+#panel { position:fixed !important; top:51px !important; right:0 !important; bottom:0 !important; width:220px !important; display:flex !important; flex-direction:column !important; overflow:hidden !important; z-index:20 !important; }
+#panel #panel-inner { display:flex !important; flex-direction:column !important; flex:1 !important; overflow:hidden !important; }
+#panel .p-top { flex-shrink:0 !important; }
+#panel .p-scroll { display:block !important; height:calc(100vh - 115px) !important; max-height:calc(100vh - 115px) !important; overflow-y:scroll !important; overflow-x:hidden !important; }
+</style>
 </body>
 </html>
