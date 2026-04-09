@@ -1633,10 +1633,11 @@ function renderCard(c){
     const card=cards.find(x=>x.id===c.id);if(!card)return;
     drag={id:c.id,sx:e.clientX,sy:e.clientY,cx:card.x,cy:card.y,moved:false,shiftKey:e.shiftKey};
     el.style.zIndex=50;
+    el._wasDragged=false;
   });
   el.addEventListener('click',e=>{
     if(e.target.closest('.card-act,.card-del,.card-resize'))return;
-    if(drag&&drag.moved)return;
+    if(el._wasDragged){el._wasDragged=false;return;}
     doSelect(c.id,e.shiftKey);
   });
 }
@@ -1739,7 +1740,7 @@ document.addEventListener('mousemove',e=>{
     if(Math.abs(dx)>5||Math.abs(dy)>5)drag.moved=true;
     if(drag.moved){
       const c=cards.find(x=>x.id===drag.id);
-      if(c){c.x=drag.cx+dx;c.y=drag.cy+dy;const el=document.getElementById('card-'+drag.id);if(el){el.style.left=c.x+'px';el.style.top=c.y+'px';}}
+      if(c){c.x=drag.cx+dx;c.y=drag.cy+dy;const el=document.getElementById('card-'+drag.id);if(el){el.style.left=c.x+'px';el.style.top=c.y+'px';el._wasDragged=true;}}
     }
   }
   if(resize){const c=cards.find(x=>x.id===resize.id);if(c){c.w=Math.max(200,resize.sw+(e.clientX-resize.sx));const el=document.getElementById('card-'+resize.id);if(el)el.style.width=c.w+'px';}}
