@@ -446,7 +446,7 @@ button,input,textarea{font-family:var(--font)}
 /* main workspace */
 #ws-main{flex:1;display:flex;overflow:hidden;margin-right:220px;height:calc(100vh - 51px);}
 #canvas{
-  flex:1;position:relative;overflow:hidden;
+  flex:1;position:relative;overflow:visible;
   background:var(--black);
   background-image:radial-gradient(circle,rgba(255,255,255,0.06) 1px,transparent 1px);
   background-size:24px 24px;
@@ -1609,13 +1609,11 @@ function renderCard(c){
     const card=cards.find(x=>x.id===c.id);if(!card)return;
     _dragCardId=c.id;_didMove=false;
     drag={id:c.id,sx:e.clientX,sy:e.clientY,cx:card.x,cy:card.y,moved:false,shiftKey:e.shiftKey};
+    // reset all other cards z-index first
+    document.querySelectorAll('.card').forEach(x=>{if(x!==el)x.style.zIndex='';});
     el.style.zIndex=50;
   };
-  el.onclick=function(e){
-    if(e.target.closest('.card-act,.card-del,.card-resize'))return;
-    if(_didMove)return;
-    doSelect(c.id,e.shiftKey);
-  };
+  // NO onclick handler - selection is handled ONLY in document mouseup
   document.getElementById('board').appendChild(el);
 }
 
@@ -1710,30 +1708,19 @@ function rSel(id){refreshSelStyle(id);}
 
 // ── DRAG, RESIZE, PAN
 // ── GLOBAL CARD INTERACTION
-let _dragStartX=0,_dragStartY=0,_dragCardId=null,_didMove=false;
+let _dragCardId=null,_didMove=false;
 
-document.addEventListener('mousedown',function(e){
-  const cardEl=e.target.closest('.card');
-  if(!cardEl)return;
-  if(e.target.closest('.card-act,.card-del,.card-resize'))return;
-  const id=cardEl.getAttribute('data-card-id');
-  if(!id)return;
-  const card=cards.find(x=>x.id===id);
-  if(!card)return;
-  e.preventDefault();
-  _dragCardId=id;_didMove=false;
-  _dragStartX=e.clientX;_dragStartY=e.clientY;
-  drag={id,sx:e.clientX,sy:e.clientY,cx:card.x,cy:card.y,moved:false,shiftKey:e.shiftKey};
-  cardEl.style.zIndex=50;
-},{passive:false});
-
+// mousedown on cards handled by el.onmousedown in renderCard
+// mouseup handles selection AND drag end — ONE system only
 document.addEventListener('mouseup',function(e){
+  // reset ALL card z-indexes to prevent stacking bugs
+  document.querySelectorAll('.card').forEach(x=>x.style.zIndex='');
   if(_dragCardId){
-    const cardEl=document.getElementById('card-'+_dragCardId);
-    if(cardEl){
-      cardEl.style.zIndex='';
-      if(!_didMove){doSelect(_dragCardId,e.shiftKey);}
-      else{saveState();}
+    if(!_didMove){
+      // it was a click — select the card
+      doSelect(_dragCardId,e.shiftKey);
+    } else {
+      saveState();
     }
     _dragCardId=null;drag=null;
   }
