@@ -797,7 +797,12 @@ button,input,textarea{font-family:var(--font)}
     <div class="feature-card">
       <div class="feature-icon">🔗</div>
       <div class="feature-title">Multi-Source Intelligence</div>
-      <div class="feature-desc">Drop in YouTube videos, PDFs, URLs, images, and notes. ContentDrop reads everything and generates content that actually understands your brand.</div>
+      <div class="feature-desc">Drop in YouTube videos, PDFs, URLs, images, notes, and social media videos. ContentDrop reads everything and generates content that actually understands your brand.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <div class="feature-title">TikTok, Instagram & Facebook Video Analyzer</div>
+      <div class="feature-desc">Analyze viral videos from ANY platform. ContentDrop guides you to the best free transcription tool — NoteGPT for TikTok, Fireflies for Instagram and Facebook — then generates content from it instantly.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">🌟</div>
@@ -958,6 +963,7 @@ button,input,textarea{font-family:var(--font)}
     <button class="ws-chip" onclick="openModal('brand')"><span class="chip-dot" style="background:#D4AF37"></span>Reference</button>
     <button class="ws-chip" onclick="openModal('pdf')"><span class="chip-dot" style="background:#a855f7"></span>PDF</button>
     <button class="ws-chip" onclick="openModal('image')"><span class="chip-dot" style="background:#f97316"></span>Image</button>
+    <button class="ws-chip" onclick="openModal('video')"><span class="chip-dot" style="background:#ec4899"></span>TikTok / IG / FB</button>
     <div class="ws-right">
       <span class="ws-status" id="ws-status-txt">Click cards to select</span>
       <button class="ws-icon-btn" onclick="openLib()">Library <span class="saved-badge" id="saved-badge">0</span></button>
@@ -1050,7 +1056,43 @@ button,input,textarea{font-family:var(--font)}
       <div class="dz" id="img-dz" onclick="document.getElementById('img-file').click()"><div id="img-dz-inner"><div class="dz-icon">🖼️</div><div class="dz-txt">Click to upload image</div><div class="dz-sub">AI will analyze it</div></div></div>
       <div class="st-line" id="img-st"></div>
     </div>
-    <div class="m-lbl">Title</div>
+    <div id="img-sec" style="display:none;margin-bottom:12px">
+      <input type="file" id="img-file" accept="image/*" style="display:none" onchange="handleImg(event)"/>
+      <div class="dz" id="img-dz" onclick="document.getElementById('img-file').click()"><div id="img-dz-inner"><div class="dz-icon">🖼️</div><div class="dz-txt">Click to upload image</div><div class="dz-sub">AI will analyze it</div></div></div>
+      <div class="st-line" id="img-st"></div>
+    </div>
+
+    <!-- Video (TikTok/IG/FB) section -->
+    <div id="video-sec" style="display:none;margin-bottom:12px">
+      <div style="background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.2);border-radius:10px;padding:14px;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:#ec4899;margin-bottom:8px;font-family:var(--mono);letter-spacing:.5px">📱 HOW TO GET YOUR VIDEO TRANSCRIPT</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7;margin-bottom:12px">TikTok, Instagram, and Facebook don't allow direct video reading. Use one of these free tools to get the transcript, then paste it below:</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#fff">NoteGPT</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:var(--mono)">Best for TikTok • Free</div>
+            </div>
+            <a href="https://notegpt.io" target="_blank" rel="noopener" style="background:#ec4899;color:#fff;font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;text-decoration:none;white-space:nowrap;flex-shrink:0">Open ↗</a>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#fff">Fireflies.ai</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:var(--mono)">Best for Instagram & Facebook • Free tier</div>
+            </div>
+            <a href="https://fireflies.ai" target="_blank" rel="noopener" style="background:#ec4899;color:#fff;font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;text-decoration:none;white-space:nowrap;flex-shrink:0">Open ↗</a>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#fff">Clop.io</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:var(--mono)">Works for all platforms • Free</div>
+            </div>
+            <a href="https://clop.io" target="_blank" rel="noopener" style="background:#ec4899;color:#fff;font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;text-decoration:none;white-space:nowrap;flex-shrink:0">Open ↗</a>
+          </div>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px;font-family:var(--mono)">💡 paste the video URL into any of the tools above → copy the transcript → paste it in the box below</div>
+      </div>
+    </div>
     <input class="m-input" id="m-card-title" placeholder="Card title..."/>
     <div class="m-lbl">Content</div>
     <textarea class="m-ta" id="m-card-content" rows="6" onkeydown="if(event.key==='Enter'&&event.metaKey)confirmAdd()"></textarea>
@@ -1170,6 +1212,7 @@ button,input,textarea{font-family:var(--font)}
     <div class="help-msg bot">hey! 👋 i'm your ContentDrop helper. ask me anything about how to use this tool — no question is too basic!</div>
   </div>
   <div class="help-chips" id="help-chips">
+    <div class="help-chip" onclick="askHelp('How do I use a TikTok, Instagram or Facebook video?')">TikTok/IG/FB videos</div>
     <div class="help-chip" onclick="askHelp('How do I get started?')">How do I start?</div>
     <div class="help-chip" onclick="askHelp('What is an API key and how do I get one?')">What is an API key?</div>
     <div class="help-chip" onclick="askHelp('How do I add content to the board?')">Adding cards</div>
@@ -1194,7 +1237,7 @@ button,input,textarea{font-family:var(--font)}
       <div class="guide-num">1</div>
       <div class="guide-step-body">
         <div class="guide-step-title">Add your content to the board</div>
-        <div class="guide-step-desc">See the buttons at the top? Click <strong>+ Note</strong> to type an idea. Click <strong>+ YouTube</strong> to paste a YouTube link. Click <strong>+ PDF</strong> to upload a document. Click <strong>+ Reference</strong> to add your brand info.<br><br>Each one creates a <strong>card</strong> on your board. Think of cards like sticky notes 📝</div>
+        <div class="guide-step-desc">See the buttons at the top? Click <strong>+ Note</strong> to type an idea. Click <strong>+ YouTube</strong> to paste a YouTube link. Click <strong>+ PDF</strong> to upload a document. Click <strong>+ Reference</strong> to add your brand info. Click <strong>+ TikTok / IG / FB</strong> to analyze videos from those platforms.<br><br>Each one creates a <strong>card</strong> on your board. Think of cards like sticky notes 📝</div>
       </div>
     </div>
 
@@ -1250,6 +1293,7 @@ let _id=0;const uid=()=>`c${++_id}`;
 const CFG={
   note:   {a:'#888',   strip:'#888',   tag:'NOTE',      tBg:'rgba(136,136,136,0.12)',  tC:'#888'},
   youtube:{a:'#c8000a',strip:'#c8000a',tag:'YOUTUBE',   tBg:'rgba(200,0,10,0.12)',     tC:'#c8000a'},
+  video:  {a:'#ec4899',strip:'#ec4899',tag:'VIDEO',     tBg:'rgba(236,72,153,0.12)',   tC:'#ec4899'},
   url:    {a:'#378ADD',strip:'#378ADD',tag:'URL',        tBg:'rgba(55,138,221,0.12)',   tC:'#378ADD'},
   brand:  {a:'#D4AF37',strip:'#D4AF37',tag:'REFERENCE', tBg:'rgba(212,175,55,0.12)',   tC:'#D4AF37'},
   pdf:    {a:'#a855f7',strip:'#a855f7',tag:'PDF',        tBg:'rgba(168,85,247,0.12)',   tC:'#a855f7'},
@@ -1740,15 +1784,16 @@ function canvasTouchEnd(){pan=null;saveState();}
 function openModal(type){
   curModal=type;const cfg=CFG[type]||CFG.note;
   const el=document.getElementById('m-title');el.textContent=`Add ${cfg.tag} Card`;el.style.setProperty('--m-col',cfg.a);
-  const defs={youtube:'YouTube Video',url:'Website / Article',note:'New Note',brand:'Brand Reference',pdf:'PDF Document',image:'Image Reference'};
+  const defs={youtube:'YouTube Video',url:'Website / Article',note:'New Note',brand:'Brand Reference',pdf:'PDF Document',image:'Image Reference',video:'TikTok / IG / Facebook Video'};
   document.getElementById('m-card-title').value=defs[type]||'Untitled';
   document.getElementById('m-card-content').value='';
-  const phs={youtube:'transcript loads here automatically...',url:'paste URL or describe the article...',brand:'brand guidelines, tone, offer details...',pdf:'extracted content appears here...',image:'AI image analysis appears here...',note:'your content, ideas, research...'};
+  const phs={youtube:'transcript loads here automatically...',url:'paste URL or describe the article...',brand:'brand guidelines, tone, offer details...',pdf:'extracted content appears here...',image:'AI image analysis appears here...',note:'your content, ideas, research...',video:'paste your video transcript here after getting it from NoteGPT, Fireflies, or Clop...'};
   document.getElementById('m-card-content').placeholder=phs[type]||'add content here...';
-  ['yt-sec','pdf-sec','img-sec'].forEach(id=>document.getElementById(id).style.display='none');
+  ['yt-sec','pdf-sec','img-sec','video-sec'].forEach(id=>document.getElementById(id).style.display='none');
   if(type==='youtube')document.getElementById('yt-sec').style.display='block';
   if(type==='pdf')document.getElementById('pdf-sec').style.display='block';
   if(type==='image')document.getElementById('img-sec').style.display='block';
+  if(type==='video')document.getElementById('video-sec').style.display='block';
   document.getElementById('yt-url').value='';document.getElementById('yt-st').textContent='';document.getElementById('yt-btn').disabled=true;
   document.getElementById('pdf-st').textContent='';document.getElementById('img-st').textContent='';
   document.getElementById('img-dz-inner').innerHTML='<div class="dz-icon">🖼️</div><div class="dz-txt">Click to upload image</div><div class="dz-sub">AI will analyze it</div>';
@@ -1918,14 +1963,25 @@ ContentDrop basics:
 - It's a tool that creates content for you using AI (Claude)
 - Users need a free Anthropic API key from console.anthropic.com to use it
 - The BOARD is the main area where you put cards (your content sources)
-- CARDS are sticky notes you add by clicking buttons at the top: + Note, + YouTube, + URL, + Reference, + PDF, + Image
+- CARDS are sticky notes you add by clicking buttons at the top: + Note, + YouTube, + URL, + Reference, + PDF, + Image, + TikTok / IG / FB
 - To SELECT a card, just click it — it glows red when selected
 - After selecting cards, pick a GENERATE TYPE from the right panel
 - Generated content appears at the bottom in a DRAWER — copy it or save it
 - LIBRARY saves all your generated content — click "Library" in the top bar
 - SETTINGS is where you enter your API key — click ⚙
 
+Video card types:
+- YOUTUBE card: paste a YouTube URL and click "Get Transcript" to auto-pull the transcript (needs free Supadata key in Settings), OR use notegpt.io to get the transcript manually
+- TIKTOK / IG / FB card: these platforms don't allow direct reading so you need a free tool to get the transcript first. Here's how:
+  1. Click the pink "TikTok / IG / FB" button in the toolbar
+  2. The modal shows 3 free tools — NoteGPT (best for TikTok), Fireflies.ai (best for Instagram and Facebook), Clop.io (works for all)
+  3. Click "Open" next to the tool, paste your video URL there, copy the transcript
+  4. Paste the transcript into the content box in ContentDrop
+  5. Click "Add to Board" — then select that card and generate!
+
 If someone asks what an API key is: it's like a password that lets you use the AI. It's free to get at console.anthropic.com. New accounts get $5 free credit which is about 1,500+ uses.
+
+If someone asks how to use TikTok or Instagram or Facebook videos: tell them to click the pink "TikTok / IG / FB" button and follow the steps — it shows them exactly which free tool to use and how to paste the transcript in.
 
 Always end with encouragement. If they seem confused, offer to walk them through step by step.`;
 
