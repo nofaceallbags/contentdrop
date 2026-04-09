@@ -1626,41 +1626,18 @@ function renderCard(c){
   document.getElementById('resize-'+c.id).addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();startResize(e,c.id);});
 
   // pointer events for drag + click-to-select
-  let pdx=0,pdy=0,pdown=false,pmoved=false;
-  el.addEventListener('pointerdown',e=>{
-    if(e.target.closest('.card-act,.card-del,.card-resize,.card-body,.card-body textarea'))return;
+  el.addEventListener('mousedown',e=>{
+    if(e.target.closest('.card-act,.card-del,.card-resize'))return;
     if(editId===c.id)return;
     e.preventDefault();
-    pdown=true;pmoved=false;
-    pdx=e.clientX;pdy=e.clientY;
     const card=cards.find(x=>x.id===c.id);if(!card)return;
-    drag={id:c.id,sx:e.clientX,sy:e.clientY,cx:card.x,cy:card.y,shiftKey:e.shiftKey};
-    el.setPointerCapture(e.pointerId);
+    drag={id:c.id,sx:e.clientX,sy:e.clientY,cx:card.x,cy:card.y,moved:false,shiftKey:e.shiftKey};
     el.style.zIndex=50;
   });
-  el.addEventListener('pointermove',e=>{
-    if(!pdown||!drag||drag.id!==c.id)return;
-    const dx=e.clientX-pdx,dy=e.clientY-pdy;
-    if(!pmoved&&(Math.abs(dx)>5||Math.abs(dy)>5))pmoved=true;
-    if(pmoved){
-      const card=cards.find(x=>x.id===c.id);if(!card)return;
-      card.x=drag.cx+(e.clientX-drag.sx);
-      card.y=drag.cy+(e.clientY-drag.sy);
-      el.style.left=card.x+'px';
-      el.style.top=card.y+'px';
-    }
-  });
-  el.addEventListener('pointerup',e=>{
-    if(!pdown)return;
-    pdown=false;
-    el.style.zIndex='';
-    if(!pmoved){
-      // it was a tap/click — select this card
-      doSelect(c.id,e.shiftKey);
-    } else {
-      saveState();
-    }
-    drag=null;
+  el.addEventListener('click',e=>{
+    if(e.target.closest('.card-act,.card-del,.card-resize'))return;
+    if(drag&&drag.moved)return;
+    doSelect(c.id,e.shiftKey);
   });
 }
 
@@ -1754,13 +1731,27 @@ function toggleSel(e,id){doSelect(id,e&&e.shiftKey);}
 function rSel(id){refreshSelStyle(id);}
 
 // ── DRAG, RESIZE, PAN
-function startDrag(e,id){} // no-op — handled by pointer events in renderCard
+function startDrag(e,id){} // no-op
 function startResize(e,id){e.stopPropagation();e.preventDefault();const c=cards.find(x=>x.id===id);if(!c)return;resize={id,sx:e.clientX,sw:c.w};}
 document.addEventListener('mousemove',e=>{
+  if(drag){
+    const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;
+    if(Math.abs(dx)>5||Math.abs(dy)>5)drag.moved=true;
+    if(drag.moved){
+      const c=cards.find(x=>x.id===drag.id);
+      if(c){c.x=drag.cx+dx;c.y=drag.cy+dy;const el=document.getElementById('card-'+drag.id);if(el){el.style.left=c.x+'px';el.style.top=c.y+'px';}}
+    }
+  }
   if(resize){const c=cards.find(x=>x.id===resize.id);if(c){c.w=Math.max(200,resize.sw+(e.clientX-resize.sx));const el=document.getElementById('card-'+resize.id);if(el)el.style.width=c.w+'px';}}
   if(pan){panOff.x=pan.ox+(e.clientX-pan.sx);panOff.y=pan.oy+(e.clientY-pan.sy);document.getElementById('board').style.transform=`translate(${panOff.x}px,${panOff.y}px)`;}
 });
-document.addEventListener('mouseup',()=>{
+document.addEventListener('mouseup',e=>{
+  if(drag){
+    const el=document.getElementById('card-'+drag.id);
+    if(el)el.style.zIndex='';
+    if(drag.moved)saveState();
+    drag=null;
+  }
   if(resize)saveState();
   if(pan)saveState();
   resize=null;pan=null;
