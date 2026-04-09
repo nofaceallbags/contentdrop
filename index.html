@@ -1602,20 +1602,10 @@ function renderCard(c){
   el.id='card-'+c.id;
   el.style.cssText=`left:${c.x}px;top:${c.y}px;width:${c.w}px;--sel-col:${cfg.a};${c.sel?`box-shadow:0 0 0 2px ${cfg.a},0 4px 24px rgba(0,0,0,0.5);border-color:${cfg.a}`:''}`;
   el.innerHTML=`<div class="card-strip" style="background:${cfg.strip}"></div><div class="card-hdr"><span class="card-tag" style="background:${cfg.tBg};color:${cfg.tC}">${cfg.tag}</span><div class="card-acts"><button class="card-act" onclick="event.stopPropagation();startEdit('${c.id}',event)">edit</button><button class="card-del" onclick="event.stopPropagation();delCard('${c.id}',event)">×</button></div></div><div class="card-ttl-wrap"><div class="card-ttl" id="t-${c.id}">${esc(c.title)}</div></div><div class="card-body${c.content?'':' empty'}" id="b-${c.id}">${c.content?esc(c.content):'empty — click edit to add'}</div><div class="card-resize" onmousedown="event.stopPropagation();event.preventDefault();startResize(event,'${c.id}')"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M7 1L1 7M7 4L4 7" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/></svg></div>`;
-  el.onmousedown=function(e){
-    if(e.target.closest('.card-act,.card-del,.card-resize'))return;
-    if(editId===c.id)return;
-    e.preventDefault();e.stopPropagation();
-    const card=cards.find(x=>x.id===c.id);if(!card)return;
-    _dragCardId=c.id;_didMove=false;
-    drag={id:c.id,sx:e.clientX,sy:e.clientY,cx:card.x,cy:card.y,moved:false,shiftKey:e.shiftKey};
-    // reset all other cards z-index first
-    document.querySelectorAll('.card').forEach(x=>{if(x!==el)x.style.zIndex='';});
-    el.style.zIndex=50;
-  };
-  // NO onclick handler - selection is handled ONLY in document mouseup
   document.getElementById('board').appendChild(el);
+  // NO closure-based handlers — all interaction handled globally via element id
 }
+
 
 function doSelect(id,shiftKey){
   if(editId===id)return;
@@ -1708,42 +1698,63 @@ function rSel(id){refreshSelStyle(id);}
 
 // ── DRAG, RESIZE, PAN
 // ── GLOBAL CARD INTERACTION
-let _dragCardId=null,_didMove=false;
+// Uses element id attribute directly - no closures, no stale references
+let _dragCardId=null,_didMove=false,_dragSX=0,_dragSY=0,_dragCX=0,_dragCY=0;
 
-// mousedown on cards handled by el.onmousedown in renderCard
-// mouseup handles selection AND drag end — ONE system only
+document.addEventListener('mousedown',function(e){
+  // find if click is on a card (but not a button/resize)
+  if(e.target.closest('.card-act,.card-del,.card-resize'))return;
+  const cardEl=e.target.closest('.card');
+  if(!cardEl)return;
+  // get id directly from element — never from closure
+  const id=cardEl.id.slice(5);
+  if(!id)return;
+  const card=cards.find(x=>x.id===id);
+  if(!card)return;
+  if(editId===id)return;
+  e.preventDefault();
+  e.stopPropagation();
+  // reset all z-indexes, bring this card to front
+  document.querySelectorAll('.card').forEach(x=>x.style.zIndex='');
+  cardEl.style.zIndex=50;
+  _dragCardId=id;
+  _didMove=false;
+  _dragSX=e.clientX;_dragSY=e.clientY;
+  _dragCX=card.x;_dragCY=card.y;
+});
+
+
+
 document.addEventListener('mouseup',function(e){
-  // reset ALL card z-indexes to prevent stacking bugs
+  // always reset all card z-indexes
   document.querySelectorAll('.card').forEach(x=>x.style.zIndex='');
   if(_dragCardId){
-    if(!_didMove){
-      // it was a click — select the card
-      doSelect(_dragCardId,e.shiftKey);
-    } else {
-      saveState();
-    }
-    _dragCardId=null;drag=null;
+    if(!_didMove){doSelect(_dragCardId,e.shiftKey);}
+    else{saveState();}
+    _dragCardId=null;
   }
   if(resize)saveState();
   if(pan)saveState();
   resize=null;pan=null;
 });
 
+
 function startDrag(e,id){} // no-op
 function startResize(e,id){e.stopPropagation();e.preventDefault();const c=cards.find(x=>x.id===id);if(!c)return;resize={id,sx:e.clientX,sw:c.w};}
-document.addEventListener('mousemove',e=>{
-  if(drag){
-    const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;
-    if(Math.abs(dx)>5||Math.abs(dy)>5){drag.moved=true;_didMove=true;}
-    if(drag.moved){
-      const c=cards.find(x=>x.id===drag.id);
-      if(c){c.x=drag.cx+dx;c.y=drag.cy+dy;const el=document.getElementById('card-'+drag.id);if(el){el.style.left=c.x+'px';el.style.top=c.y+'px';}}
+document.addEventListener('mousemove',function(e){
+  if(_dragCardId){
+    const dx=e.clientX-_dragSX,dy=e.clientY-_dragSY;
+    if(Math.abs(dx)>4||Math.abs(dy)>4){
+      _didMove=true;
+      const card=cards.find(x=>x.id===_dragCardId);
+      const el=document.getElementById('card-'+_dragCardId);
+      if(card&&el){card.x=_dragCX+dx;card.y=_dragCY+dy;el.style.left=card.x+'px';el.style.top=card.y+'px';}
     }
   }
   if(resize){const c=cards.find(x=>x.id===resize.id);if(c){c.w=Math.max(200,resize.sw+(e.clientX-resize.sx));const el=document.getElementById('card-'+resize.id);if(el)el.style.width=c.w+'px';}}
   if(pan){panOff.x=pan.ox+(e.clientX-pan.sx);panOff.y=pan.oy+(e.clientY-pan.sy);document.getElementById('board').style.transform=`translate(${panOff.x}px,${panOff.y}px)`;}
 });
-// mouseup handled globally above
+
 function canvasDown(e){
   if(e.target.id!=='canvas'&&e.target.id!=='board')return;
   e.preventDefault();
