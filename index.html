@@ -708,7 +708,7 @@ button,input,textarea{font-family:var(--font)}
     <button class="btn-hero-ghost" onclick="scrollToHow()">See how it works</button>
   </div>
   <div class="hero-stats">
-    <div class="stat"><div class="stat-num">34<span>+</span></div><div class="stat-label">content generators</div></div>
+    <div class="stat"><div class="stat-num">35<span>+</span></div><div class="stat-label">content generators</div></div>
     <div class="stat"><div class="stat-num">1<span>x</span></div><div class="stat-label">payment forever</div></div>
     <div class="stat"><div class="stat-num">6<span>+</span></div><div class="stat-label">platforms covered</div></div>
     <div class="stat"><div class="stat-num">∞</div><div class="stat-label">generates</div></div>
@@ -786,8 +786,8 @@ button,input,textarea{font-family:var(--font)}
   <div class="features-grid">
     <div class="feature-card">
       <div class="feature-icon">🎯</div>
-      <div class="feature-title">34 Content Generators</div>
-      <div class="feature-desc">IG captions, TikTok scripts, YouTube scripts, emails, blog posts, podcast scripts, reels, UGC, ASMR, short films, ebooks, sales pages, lead magnets, SEO titles — all in one place.</div>
+      <div class="feature-title">35 Content Generators</div>
+      <div class="feature-desc">IG captions, TikTok scripts, YouTube scripts, emails, blog posts, podcast scripts, reels, UGC, ASMR, short films, ebooks, sales pages, lead magnets, SEO titles, Reddit posts — all in one place.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">🛒</div>
@@ -1312,6 +1312,7 @@ const GEN_GROUPS=[
     {id:'hooks',l:'5 Viral Hooks',e:'🪝',p:'Write 5 viral hooks:\n1. POV opener\n2. Number-based\n3. Bold statement\n4. "If I wanted to..." format\n5. Call-out opener\nEach 1-2 sentences. Impossible to scroll past.'},
     {id:'captions',l:'Video Captions',e:'💬',p:'Write on-screen captions. Timestamps [0:00],[0:03] etc. 1-6 words per line. Punchy, emoji-forward. Minimum 15-20 lines.'},
     {id:'thread',l:'Thread Post',e:'🧵',p:'Write a Threads/X post. Conversational, punchy, value-packed. End with question or soft CTA.'},
+    {id:'reddit',l:'Reddit Post',e:'🟠',p:'Write a Reddit post based on the board content. Write in Reddit\'s style — genuine, no-fluff, community-first. No salesy language. Include: a compelling title (under 300 chars), a detailed post body that provides real value, feels like a real person sharing experience or asking advice, and fits naturally into a subreddit. Suggest 3 relevant subreddits to post in. Write 3 variations: 1) Story/experience post, 2) Question/discussion post, 3) Value/tips post.'},
     {id:'facebook',l:'Facebook Post',e:'👥',p:'Write 3 Facebook versions:\nV1 — STORY: personal story, 3-5 short paragraphs.\nV2 — VALUE: educational with list.\nV3 — ENGAGEMENT: opinion/question that drives comments.'},
   ]},
   {label:'Ads & Email',items:[
@@ -1375,7 +1376,7 @@ const typewriterWords=[
   'Short film scripts for faceless creators',
   'Thank you pages that upsell',
   'FAQ sections that crush objections',
-  'Product bundle ideas with pricing',
+  'Reddit posts that blend in and convert',
 ];
 let twIdx=0,twChar=0,twDeleting=false;
 function typewrite(){
@@ -1396,7 +1397,7 @@ function buildMarquee(){
   const pills=[
     {e:'📸',l:'IG Caption'},{e:'🎬',l:'TikTok Script'},{e:'🎞️',l:'Instagram Reel'},
     {e:'⚡',l:'7-Sec TikTok'},{e:'🪝',l:'5 Viral Hooks'},{e:'💬',l:'Video Captions'},
-    {e:'🧵',l:'Thread Post'},{e:'👥',l:'Facebook Post'},{e:'💰',l:'Ad Copy'},
+    {e:'🧵',l:'Thread Post'},{e:'🟠',l:'Reddit Post'},{e:'👥',l:'Facebook Post'},{e:'💰',l:'Ad Copy'},
     {e:'🔥',l:'Viral Rewrite'},{e:'📧',l:'Full Email'},{e:'🎥',l:'YouTube Script'},
     {e:'🎙️',l:'Podcast Script'},{e:'✍️',l:'Blog Post'},{e:'🌐',l:'Website Copy'},
     {e:'📚',l:'Educational Content'},{e:'🌟',l:'AI Twin Vlog'},{e:'🤫',l:'ASMR Script'},
