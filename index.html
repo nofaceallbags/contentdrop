@@ -968,6 +968,8 @@ button,input,textarea{font-family:var(--font)}
     <button class="ws-chip" onclick="openModal('pdf')"><span class="chip-dot" style="background:#a855f7"></span>PDF</button>
     <button class="ws-chip" onclick="openModal('image')"><span class="chip-dot" style="background:#f97316"></span>Image</button>
     <button class="ws-chip" onclick="openModal('video')"><span class="chip-dot" style="background:#ec4899"></span>TikTok / IG / FB</button>
+    <!-- ✨ NEW: Instagram Carousel button -->
+    <button class="ws-chip" onclick="openModal('carousel')" style="border-color:rgba(193,53,132,0.35);color:rgba(193,53,132,0.8)"><span class="chip-dot" style="background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:50%"></span>IG Carousel</button>
     <div class="ws-right">
       <span class="ws-status" id="ws-status-txt">Click cards to select</span>
       <button class="ws-icon-btn" onclick="openLib()">Library <span class="saved-badge" id="saved-badge">0</span></button>
@@ -1035,6 +1037,26 @@ button,input,textarea{font-family:var(--font)}
   </div>
 </div>
 
+<!-- ✨ NEW: IG Carousel Slide Count Modal -->
+<div class="overlay" id="carousel-modal" onclick="if(event.target===this)closeCarouselModal()">
+  <div class="modal" style="width:380px">
+    <div class="m-title" style="--m-col:#cc2366">🎠 IG Carousel Generator</div>
+    <div class="m-lbl">How many slides? (3–15)</div>
+    <div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">
+        <input type="range" id="carousel-slider" min="3" max="15" value="7" oninput="document.getElementById('carousel-slide-num').textContent=this.value;carouselSlides=parseInt(this.value)" style="flex:1;accent-color:#cc2366"/>
+        <span id="carousel-slide-num" style="font-size:22px;font-weight:700;color:#cc2366;min-width:32px;text-align:center">7</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.25);font-family:var(--mono)"><span>3 slides</span><span>15 slides</span></div>
+    </div>
+    <div style="background:rgba(193,53,132,0.06);border:1px solid rgba(193,53,132,0.2);border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:rgba(255,255,255,0.45);font-family:var(--mono);line-height:1.6">each slide gets a hook headline + bold text overlay + supporting copy. slide 1 is always a scroll-stopper cover. select your cards first.</div>
+    <div class="m-btns">
+      <button class="btn-p" style="background:#cc2366" onclick="generateCarousel()">Generate Carousel →</button>
+      <button class="btn-s" onclick="closeCarouselModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 
 <div class="overlay" id="card-modal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
@@ -1054,11 +1076,6 @@ button,input,textarea{font-family:var(--font)}
       <input type="file" id="pdf-file" accept=".pdf" style="display:none" onchange="handlePdf(event)"/>
       <div class="dz" onclick="document.getElementById('pdf-file').click()"><div class="dz-icon">📄</div><div class="dz-txt">Click to upload PDF</div><div class="dz-sub">AI reads and extracts automatically</div></div>
       <div class="st-line" id="pdf-st"></div>
-    </div>
-    <div id="img-sec" style="display:none;margin-bottom:12px">
-      <input type="file" id="img-file" accept="image/*" style="display:none" onchange="handleImg(event)"/>
-      <div class="dz" id="img-dz" onclick="document.getElementById('img-file').click()"><div id="img-dz-inner"><div class="dz-icon">🖼️</div><div class="dz-txt">Click to upload image</div><div class="dz-sub">AI will analyze it</div></div></div>
-      <div class="st-line" id="img-st"></div>
     </div>
     <div id="img-sec" style="display:none;margin-bottom:12px">
       <input type="file" id="img-file" accept="image/*" style="display:none" onchange="handleImg(event)"/>
@@ -1241,7 +1258,7 @@ button,input,textarea{font-family:var(--font)}
       <div class="guide-num">1</div>
       <div class="guide-step-body">
         <div class="guide-step-title">Add your content to the board</div>
-        <div class="guide-step-desc">See the buttons at the top? Click <strong>+ Note</strong> to type an idea. Click <strong>+ YouTube</strong> to paste a YouTube link. Click <strong>+ PDF</strong> to upload a document. Click <strong>+ Reference</strong> to add your brand info. Click <strong>+ TikTok / IG / FB</strong> to analyze videos from those platforms.<br><br>Each one creates a <strong>card</strong> on your board. Think of cards like sticky notes 📝</div>
+        <div class="guide-step-desc">See the buttons at the top? Click <strong>+ Note</strong> to type an idea. Click <strong>+ YouTube</strong> to paste a YouTube link. Click <strong>+ PDF</strong> to upload a document. Click <strong>+ Reference</strong> to add your brand info. Click <strong>+ TikTok / IG / FB</strong> to analyze videos from those platforms. Click <strong>+ IG Carousel</strong> to create a slide-by-slide Instagram carousel.<br><br>Each one creates a <strong>card</strong> on your board. Think of cards like sticky notes 📝</div>
       </div>
     </div>
 
@@ -1259,6 +1276,7 @@ button,input,textarea{font-family:var(--font)}
         <div class="guide-step-title">Pick what you want to create</div>
         <div class="guide-step-desc">Look at the right side panel — it shows everything ContentDrop can make for you. Things like:<br><br>
         📸 <strong>IG Caption</strong> — a ready-to-post Instagram caption<br>
+        🎠 <strong>IG Carousel</strong> — a full slide-by-slide carousel script<br>
         🎬 <strong>TikTok Script</strong> — a full script to record<br>
         📧 <strong>Full Email</strong> — a marketing email<br>
         📖 <strong>Ebook</strong> — a complete ebook (you pick how many pages!)<br><br>
@@ -1290,19 +1308,21 @@ let cards=[],selIds=new Set(),savedItems=[];
 let drag=null,resize=null,pan=null,panOff={x:0,y:0},dragStartX=0,dragStartY=0;
 let editId=null,curModal=null,curOut=null,generating=false;
 let ebookPages=10;
+let carouselSlides=7; // ✨ NEW
 let wsTheme=localStorage.getItem('cd_wstheme')||'dark';
 let _id=0;const uid=()=>`c${++_id}`;
 
 // ── CFG
 const CFG={
-  note:   {a:'#888',   strip:'#888',   tag:'NOTE',      tBg:'rgba(136,136,136,0.12)',  tC:'#888'},
-  youtube:{a:'#c8000a',strip:'#c8000a',tag:'YOUTUBE',   tBg:'rgba(200,0,10,0.12)',     tC:'#c8000a'},
-  video:  {a:'#ec4899',strip:'#ec4899',tag:'VIDEO',     tBg:'rgba(236,72,153,0.12)',   tC:'#ec4899'},
-  url:    {a:'#378ADD',strip:'#378ADD',tag:'URL',        tBg:'rgba(55,138,221,0.12)',   tC:'#378ADD'},
-  brand:  {a:'#D4AF37',strip:'#D4AF37',tag:'REFERENCE', tBg:'rgba(212,175,55,0.12)',   tC:'#D4AF37'},
-  pdf:    {a:'#a855f7',strip:'#a855f7',tag:'PDF',        tBg:'rgba(168,85,247,0.12)',   tC:'#a855f7'},
-  image:  {a:'#f97316',strip:'#f97316',tag:'IMAGE',      tBg:'rgba(249,115,22,0.12)',   tC:'#f97316'},
-  output: {a:'#22c55e',strip:'#22c55e',tag:'GENERATED',  tBg:'rgba(34,197,94,0.12)',   tC:'#22c55e'},
+  note:     {a:'#888',   strip:'#888',   tag:'NOTE',      tBg:'rgba(136,136,136,0.12)',  tC:'#888'},
+  youtube:  {a:'#c8000a',strip:'#c8000a',tag:'YOUTUBE',   tBg:'rgba(200,0,10,0.12)',     tC:'#c8000a'},
+  video:    {a:'#ec4899',strip:'#ec4899',tag:'VIDEO',     tBg:'rgba(236,72,153,0.12)',   tC:'#ec4899'},
+  url:      {a:'#378ADD',strip:'#378ADD',tag:'URL',        tBg:'rgba(55,138,221,0.12)',   tC:'#378ADD'},
+  brand:    {a:'#D4AF37',strip:'#D4AF37',tag:'REFERENCE', tBg:'rgba(212,175,55,0.12)',   tC:'#D4AF37'},
+  pdf:      {a:'#a855f7',strip:'#a855f7',tag:'PDF',        tBg:'rgba(168,85,247,0.12)',   tC:'#a855f7'},
+  image:    {a:'#f97316',strip:'#f97316',tag:'IMAGE',      tBg:'rgba(249,115,22,0.12)',   tC:'#f97316'},
+  carousel: {a:'#cc2366',strip:'linear-gradient(90deg,#f09433,#dc2743,#bc1888)',tag:'CAROUSEL',tBg:'rgba(193,53,132,0.12)',tC:'#cc2366'}, // ✨ NEW
+  output:   {a:'#22c55e',strip:'#22c55e',tag:'GENERATED',  tBg:'rgba(34,197,94,0.12)',   tC:'#22c55e'},
 };
 
 const SYS=`You are a world-class content strategist and copywriter helping content creators, coaches, entrepreneurs, and small business owners create compelling content across all platforms. Analyze board content thoroughly and generate the requested output. Be specific, actionable, write in a voice that converts, and prioritize content that stops the scroll, drives engagement, and gets results.`;
@@ -1310,6 +1330,7 @@ const SYS=`You are a world-class content strategist and copywriter helping conte
 const GEN_GROUPS=[
   {label:'Social',items:[
     {id:'caption',l:'IG Caption',e:'📸',p:'Write a strong Instagram caption. Hook first line, value in middle, CTA at end. Natural emojis. Conversational, not corporate.'},
+    {id:'carousel_gen',l:'IG Carousel',e:'🎠',p:'__CAROUSEL__'},
     {id:'tiktok',l:'TikTok Script',e:'🎬',p:'Write a TikTok/Reel script with 3-second hook, [VISUAL CUE] directions, value content, and CTA. Under 60 seconds.'},
     {id:'reels',l:'Instagram Reel',e:'🎞️',p:'Write 3 complete Instagram Reel concepts.\n\nFor each:\nREEL [#] — [NAME]\nLENGTH:\nHOOK (5 words max):\nVISUAL CONCEPT:\nVOICEOVER/AUDIO:\nCAPTIONS: [each line 1-6 words]\nCTA:\nPOST CAPTION: [full caption + hashtags]\n\nMix story, value, and offer reels.'},
     {id:'tiktok7',l:'7-Sec TikTok',e:'⚡',p:'Write 3 seven-second TikTok scripts.\nEach:\n[VISUAL]:\n[TEXT OVERLAY]: 5 words max\n[AUDIO]:\n[CTA]:\nStop the scroll in the first half second.'},
@@ -1362,6 +1383,7 @@ const GEN_GROUPS=[
 // ── HOME animations
 const typewriterWords=[
   'IG Captions that stop the scroll',
+  'Instagram Carousels slide by slide',
   'TikTok scripts in 60 seconds',
   'YouTube scripts with AI research',
   'Email campaigns that convert',
@@ -1399,7 +1421,7 @@ function typewrite(){
 // marquee build
 function buildMarquee(){
   const pills=[
-    {e:'📸',l:'IG Caption'},{e:'🎬',l:'TikTok Script'},{e:'🎞️',l:'Instagram Reel'},
+    {e:'📸',l:'IG Caption'},{e:'🎠',l:'IG Carousel'},{e:'🎬',l:'TikTok Script'},{e:'🎞️',l:'Instagram Reel'},
     {e:'⚡',l:'7-Sec TikTok'},{e:'🪝',l:'5 Viral Hooks'},{e:'💬',l:'Video Captions'},
     {e:'🧵',l:'Thread Post'},{e:'🟠',l:'Reddit Post'},{e:'👥',l:'Facebook Post'},{e:'💰',l:'Ad Copy'},
     {e:'🔥',l:'Viral Rewrite'},{e:'📧',l:'Full Email'},{e:'🎥',l:'YouTube Script'},
@@ -1588,6 +1610,21 @@ async function generateEbook(){
   await generate(ot);
 }
 
+// ── ✨ CAROUSEL MODAL
+function openCarouselModal(){
+  if(!selIds.size){alert('select some cards on the board first so ContentDrop knows what your carousel is about!');return;}
+  document.getElementById('carousel-modal').style.display='flex';
+}
+function closeCarouselModal(){document.getElementById('carousel-modal').style.display='none';}
+async function generateCarousel(){
+  closeCarouselModal();
+  const slides=carouselSlides;
+  const ot={id:'carousel_gen',l:`IG Carousel (${slides} slides)`,e:'🎠'};
+  const p=`Write a complete Instagram carousel post with ${slides} slides based on the board content.\n\nCARROUSEL TITLE OPTIONS (3 — curiosity-gap, value-forward, scroll-stopping):\n\nOVERALL TOPIC/HOOK:\n\nSLIDE 1 — COVER (the hook that makes them tap):\nHEADLINE: [bold, max 7 words, impossible to ignore]\nSUBTEXT: [optional 1 line under headline]\nVISUAL DIRECTION: [background color/image style, text placement]\n\n${Array.from({length:slides-2},(_,i)=>`SLIDE ${i+2} — [TITLE]:\nHEADLINE: [bold, punchy — 5-8 words]\nBODY COPY: [2-4 short lines of supporting text. Conversational. No fluff.]\nVISUAL DIRECTION: [layout tip, icon or graphic suggestion]\nTEXT OVERLAY: [the one bold line that works as a standalone graphic]`).join('\n\n')}\n\nSLIDE ${slides} — CTA (the closer):\nHEADLINE: [action-driven close]\nCTA: [clear next step — save, share, comment, follow, click link]\nVISUAL DIRECTION: [strong close aesthetic]\n\nPOST CAPTION:\n[Write the full Instagram caption for this carousel. Hook first line, tease the slides, CTA to swipe. End with hashtags.]\n\nHASHTAGS: [15-20 relevant hashtags]\n\nKeep every slide tight. Each one should work as a standalone graphic. Swipe-worthy from slide 1.`;
+  ot.p=p;
+  await generate(ot);
+}
+
 // ── CARDS
 function addCard({type,title,content,x,y,w}){
   const id=uid();
@@ -1600,8 +1637,10 @@ function renderCard(c){
   const el=document.createElement('div');
   el.className='card'+(c.sel?' selected':'');
   el.id='card-'+c.id;
+  // handle gradient strip for carousel
+  const stripStyle=cfg.strip.startsWith('linear')?`background:${cfg.strip}`:`background:${cfg.strip}`;
   el.style.cssText=`left:${c.x}px;top:${c.y}px;width:${c.w}px;--sel-col:${cfg.a};${c.sel?`box-shadow:0 0 0 2px ${cfg.a},0 4px 24px rgba(0,0,0,0.5);border-color:${cfg.a}`:''}`;
-  el.innerHTML=`<div class="card-strip" style="background:${cfg.strip}"></div><div class="card-hdr"><span class="card-tag" style="background:${cfg.tBg};color:${cfg.tC}">${cfg.tag}</span><div class="card-acts"><button class="card-act" onclick="event.stopPropagation();startEdit('${c.id}',event)">edit</button><button class="card-del" onclick="event.stopPropagation();delCard('${c.id}',event)">×</button></div></div><div class="card-ttl-wrap"><div class="card-ttl" id="t-${c.id}">${esc(c.title)}</div></div><div class="card-body${c.content?'':' empty'}" id="b-${c.id}">${c.content?esc(c.content):'empty — click edit to add'}</div><div class="card-resize" onmousedown="event.stopPropagation();event.preventDefault();startResize(event,'${c.id}')"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M7 1L1 7M7 4L4 7" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/></svg></div>`;
+  el.innerHTML=`<div class="card-strip" style="${stripStyle}"></div><div class="card-hdr"><span class="card-tag" style="background:${cfg.tBg};color:${cfg.tC}">${cfg.tag}</span><div class="card-acts"><button class="card-act" onclick="event.stopPropagation();startEdit('${c.id}',event)">edit</button><button class="card-del" onclick="event.stopPropagation();delCard('${c.id}',event)">×</button></div></div><div class="card-ttl-wrap"><div class="card-ttl" id="t-${c.id}">${esc(c.title)}</div></div><div class="card-body${c.content?'':' empty'}" id="b-${c.id}">${c.content?esc(c.content):'empty — click edit to add'}</div><div class="card-resize" onmousedown="event.stopPropagation();event.preventDefault();startResize(event,'${c.id}')"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M7 1L1 7M7 4L4 7" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/></svg></div>`;
   document.getElementById('board').appendChild(el);
 }
 
@@ -1784,6 +1823,15 @@ function canvasTouchEnd(){pan=null;saveState();}
 
 // ── MODAL
 function openModal(type){
+  // ✨ IG Carousel uses its own flow — select cards then open slide count modal
+  if(type==='carousel'){
+    if(!selIds.size){
+      showToast('select a card on the board first, then click IG Carousel 👆','#cc2366');
+      return;
+    }
+    openCarouselModal();
+    return;
+  }
   curModal=type;const cfg=CFG[type]||CFG.note;
   const el=document.getElementById('m-title');el.textContent=`Add ${cfg.tag} Card`;el.style.setProperty('--m-col',cfg.a);
   const defs={youtube:'YouTube Video',url:'Website / Article',note:'New Note',brand:'Brand Reference',pdf:'PDF Document',image:'Image Reference',video:'TikTok / IG / Facebook Video'};
@@ -1864,6 +1912,14 @@ function buildGenList(){
       if(ot.id==='ebook'){
         btn.innerHTML=`<span>${ot.e}</span><span>${ot.l}</span><span style="font-size:9px;font-family:var(--mono);color:rgba(255,255,255,0.25);margin-left:auto;flex-shrink:0">pick pages</span>`;
         btn.onclick=()=>openEbookModal();
+      } else if(ot.id==='carousel_gen'){
+        // ✨ IG Carousel in sidebar — opens slide count picker
+        btn.innerHTML=`<span>${ot.e}</span><span>${ot.l}</span><span style="font-size:9px;font-family:var(--mono);color:rgba(255,255,255,0.25);margin-left:auto;flex-shrink:0">pick slides</span>`;
+        btn.style.cssText+='border-color:rgba(193,53,132,0.2);';
+        btn.onclick=()=>{
+          if(!selIds.size){showToast('select a card first, then generate 🎠','#cc2366');return;}
+          openCarouselModal();
+        };
       } else {
         btn.innerHTML=`<span>${ot.e}</span><span>${ot.l}</span>`;
         btn.onclick=()=>generate(ot);
@@ -1885,8 +1941,9 @@ async function generate(ot){
   const sel=cards.filter(c=>selIds.has(c.id));
   const ctx=sel.map(c=>`[${(CFG[c.type]||CFG.note).tag}: ${c.title}]\n${c.content}`).join('\n\n---\n\n');
   const isEbook=ot.id==='ebook';
+  const isCarousel=ot.id==='carousel_gen';
   try{
-    const d=await callClaude({model:'claude-sonnet-4-20250514',max_tokens:isEbook?4000:2000,system:SYS,messages:[{role:'user',content:`Board content:\n\n${ctx}\n\n---\n\n${ot.p}`}]});
+    const d=await callClaude({model:'claude-sonnet-4-20250514',max_tokens:(isEbook||isCarousel)?4000:2000,system:SYS,messages:[{role:'user',content:`Board content:\n\n${ctx}\n\n---\n\n${ot.p}`}]});
     const text=d.content?.find(b=>b.type==='text')?.text||(d.error?.message||'generation failed — try again');
     curOut={ot,text};showDrawer(ot,text);
     const n=cards.length;addCard({type:'output',title:`${ot.e} ${ot.l}`,content:text,x:28+(n%4)*295,y:520,w:280});
@@ -1971,6 +2028,7 @@ ContentDrop basics:
 - Generated content appears at the bottom in a DRAWER — copy it or save it
 - LIBRARY saves all your generated content — click "Library" in the top bar
 - SETTINGS is where you enter your API key — click ⚙
+- IG CAROUSEL: select your cards on the board first, then click the pink "IG Carousel" button in the toolbar OR click "🎠 IG Carousel" in the right panel. You'll be asked how many slides you want (3–15), then ContentDrop writes a full slide-by-slide carousel script with cover, content slides, and a CTA closer — plus a full caption and hashtags.
 
 Video card types:
 - YOUTUBE card: paste a YouTube URL and click "Get Transcript" to auto-pull the transcript (needs free Supadata key in Settings), OR use notegpt.io to get the transcript manually
@@ -1982,8 +2040,6 @@ Video card types:
   5. Click "Add to Board" — then select that card and generate!
 
 If someone asks what an API key is: it's like a password that lets you use the AI. It's free to get at console.anthropic.com. New accounts get $5 free credit which is about 1,500+ uses.
-
-If someone asks how to use TikTok or Instagram or Facebook videos: tell them to click the pink "TikTok / IG / FB" button and follow the steps — it shows them exactly which free tool to use and how to paste the transcript in.
 
 Always end with encouragement. If they seem confused, offer to walk them through step by step.`;
 
