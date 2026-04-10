@@ -970,6 +970,8 @@ button,input,textarea{font-family:var(--font)}
     <button class="ws-chip" onclick="openModal('video')"><span class="chip-dot" style="background:#ec4899"></span>TikTok / IG / FB</button>
     <!-- ✨ NEW: Instagram Carousel button -->
     <button class="ws-chip" onclick="openModal('carousel')" style="border-color:rgba(193,53,132,0.35);color:rgba(193,53,132,0.8)"><span class="chip-dot" style="background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:50%"></span>IG Carousel</button>
+    <!-- ✨ NEW: Instagram Story button -->
+    <button class="ws-chip" onclick="openModal('story')" style="border-color:rgba(245,158,11,0.35);color:rgba(245,158,11,0.8)"><span class="chip-dot" style="background:linear-gradient(135deg,#f59e0b,#ef4444,#8b5cf6);border-radius:50%"></span>IG Story</button>
     <div class="ws-right">
       <span class="ws-status" id="ws-status-txt">Click cards to select</span>
       <button class="ws-icon-btn" onclick="openLib()">Library <span class="saved-badge" id="saved-badge">0</span></button>
@@ -1037,7 +1039,25 @@ button,input,textarea{font-family:var(--font)}
   </div>
 </div>
 
-<!-- ✨ NEW: IG Carousel Slide Count Modal -->
+<!-- ✨ NEW: IG Story Slide Count Modal -->
+<div class="overlay" id="story-modal" onclick="if(event.target===this)closeStoryModal()">
+  <div class="modal" style="width:380px">
+    <div class="m-title" style="--m-col:#f59e0b">📱 IG Story Slides Generator</div>
+    <div class="m-lbl">How many story slides? (3–10)</div>
+    <div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">
+        <input type="range" id="story-slider" min="3" max="10" value="5" oninput="document.getElementById('story-slide-num').textContent=this.value;storySlides=parseInt(this.value)" style="flex:1;accent-color:#f59e0b"/>
+        <span id="story-slide-num" style="font-size:22px;font-weight:700;color:#f59e0b;min-width:32px;text-align:center">5</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.25);font-family:var(--mono)"><span>3 slides</span><span>10 slides</span></div>
+    </div>
+    <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:rgba(255,255,255,0.45);font-family:var(--mono);line-height:1.6">each story slide gets a bold text overlay, visual direction, and tap-through hook. slide 1 grabs attention, last slide has a CTA. optimized for 9:16 vertical format. select your cards first.</div>
+    <div class="m-btns">
+      <button class="btn-p" style="background:linear-gradient(135deg,#f59e0b,#ef4444)" onclick="generateStory()">Generate Story Slides →</button>
+      <button class="btn-s" onclick="closeStoryModal()">Cancel</button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="carousel-modal" onclick="if(event.target===this)closeCarouselModal()">
   <div class="modal" style="width:380px">
     <div class="m-title" style="--m-col:#cc2366">🎠 IG Carousel Generator</div>
@@ -1309,6 +1329,7 @@ let drag=null,resize=null,pan=null,panOff={x:0,y:0},dragStartX=0,dragStartY=0;
 let editId=null,curModal=null,curOut=null,generating=false;
 let ebookPages=10;
 let carouselSlides=7; // ✨ NEW
+let storySlides=5;   // ✨ NEW
 let wsTheme=localStorage.getItem('cd_wstheme')||'dark';
 let _id=0;const uid=()=>`c${++_id}`;
 
@@ -1321,7 +1342,8 @@ const CFG={
   brand:    {a:'#D4AF37',strip:'#D4AF37',tag:'REFERENCE', tBg:'rgba(212,175,55,0.12)',   tC:'#D4AF37'},
   pdf:      {a:'#a855f7',strip:'#a855f7',tag:'PDF',        tBg:'rgba(168,85,247,0.12)',   tC:'#a855f7'},
   image:    {a:'#f97316',strip:'#f97316',tag:'IMAGE',      tBg:'rgba(249,115,22,0.12)',   tC:'#f97316'},
-  carousel: {a:'#cc2366',strip:'linear-gradient(90deg,#f09433,#dc2743,#bc1888)',tag:'CAROUSEL',tBg:'rgba(193,53,132,0.12)',tC:'#cc2366'}, // ✨ NEW
+  carousel: {a:'#cc2366',strip:'linear-gradient(90deg,#f09433,#dc2743,#bc1888)',tag:'CAROUSEL',tBg:'rgba(193,53,132,0.12)',tC:'#cc2366'},
+  story:    {a:'#f59e0b',strip:'linear-gradient(90deg,#f59e0b,#ef4444,#8b5cf6)',tag:'IG STORY',tBg:'rgba(245,158,11,0.12)',tC:'#f59e0b'},
   output:   {a:'#22c55e',strip:'#22c55e',tag:'GENERATED',  tBg:'rgba(34,197,94,0.12)',   tC:'#22c55e'},
 };
 
@@ -1331,6 +1353,7 @@ const GEN_GROUPS=[
   {label:'Social',items:[
     {id:'caption',l:'IG Caption',e:'📸',p:'Write a strong Instagram caption. Hook first line, value in middle, CTA at end. Natural emojis. Conversational, not corporate.'},
     {id:'carousel_gen',l:'IG Carousel',e:'🎠',p:'__CAROUSEL__'},
+    {id:'story_gen',l:'IG Story Slides',e:'📱',p:'__STORY__'},
     {id:'tiktok',l:'TikTok Script',e:'🎬',p:'Write a TikTok/Reel script with 3-second hook, [VISUAL CUE] directions, value content, and CTA. Under 60 seconds.'},
     {id:'reels',l:'Instagram Reel',e:'🎞️',p:'Write 3 complete Instagram Reel concepts.\n\nFor each:\nREEL [#] — [NAME]\nLENGTH:\nHOOK (5 words max):\nVISUAL CONCEPT:\nVOICEOVER/AUDIO:\nCAPTIONS: [each line 1-6 words]\nCTA:\nPOST CAPTION: [full caption + hashtags]\n\nMix story, value, and offer reels.'},
     {id:'tiktok7',l:'7-Sec TikTok',e:'⚡',p:'Write 3 seven-second TikTok scripts.\nEach:\n[VISUAL]:\n[TEXT OVERLAY]: 5 words max\n[AUDIO]:\n[CTA]:\nStop the scroll in the first half second.'},
@@ -1384,6 +1407,7 @@ const GEN_GROUPS=[
 const typewriterWords=[
   'IG Captions that stop the scroll',
   'Instagram Carousels slide by slide',
+  'Instagram Story sequences that convert',
   'TikTok scripts in 60 seconds',
   'YouTube scripts with AI research',
   'Email campaigns that convert',
@@ -1421,7 +1445,7 @@ function typewrite(){
 // marquee build
 function buildMarquee(){
   const pills=[
-    {e:'📸',l:'IG Caption'},{e:'🎠',l:'IG Carousel'},{e:'🎬',l:'TikTok Script'},{e:'🎞️',l:'Instagram Reel'},
+    {e:'📸',l:'IG Caption'},{e:'🎠',l:'IG Carousel'},{e:'📱',l:'IG Story Slides'},{e:'🎬',l:'TikTok Script'},{e:'🎞️',l:'Instagram Reel'},
     {e:'⚡',l:'7-Sec TikTok'},{e:'🪝',l:'5 Viral Hooks'},{e:'💬',l:'Video Captions'},
     {e:'🧵',l:'Thread Post'},{e:'🟠',l:'Reddit Post'},{e:'👥',l:'Facebook Post'},{e:'💰',l:'Ad Copy'},
     {e:'🔥',l:'Viral Rewrite'},{e:'📧',l:'Full Email'},{e:'🎥',l:'YouTube Script'},
@@ -1610,7 +1634,20 @@ async function generateEbook(){
   await generate(ot);
 }
 
-// ── ✨ CAROUSEL MODAL
+// ── ✨ STORY MODAL
+function openStoryModal(){
+  if(!selIds.size){showToast('select a card on the board first, then click IG Story 👆','#f59e0b');return;}
+  document.getElementById('story-modal').style.display='flex';
+}
+function closeStoryModal(){document.getElementById('story-modal').style.display='none';}
+async function generateStory(){
+  closeStoryModal();
+  const slides=storySlides;
+  const ot={id:'story_gen',l:`IG Story (${slides} slides)`,e:'📱'};
+  const p=`Write a complete Instagram Story sequence with ${slides} slides based on the board content. Optimized for 9:16 vertical format, fast tap-throughs, and high engagement.\n\nSTORY SERIES TITLE: [what this story sequence is about]\nGOAL: [what action you want viewers to take by the end]\n\nSLIDE 1 — HOOK (stop the tap, make them keep watching):\nBOLD TEXT OVERLAY: [5 words max — the one thing they see first]\nSUPPORTING TEXT: [optional 1 line]\nVISUAL DIRECTION: [background color, gradient, or image style — be specific]\nSTICKER/ELEMENT: [poll, emoji slider, question box, countdown, or none]\nTAP-THROUGH HOOK: [tease what's on the next slide]\n\n${Array.from({length:slides-2},(_,i)=>`SLIDE ${i+2}:\nBOLD TEXT OVERLAY: [punchy, max 8 words]\nBODY COPY: [1-3 short lines — conversational, no walls of text]\nVISUAL DIRECTION: [specific aesthetic — color palette, mood, background]\nSTICKER/ELEMENT: [interactive element if relevant — poll/question/quiz/emoji slider/none]\nTAP-THROUGH HOOK: [why they'll tap to the next slide]`).join('\n\n')}\n\nSLIDE ${slides} — CTA (the action slide):\nBOLD TEXT OVERLAY: [action-driven headline]\nCTA TEXT: [exactly what to do — swipe up, DM, click link in bio, save this, share]\nVISUAL DIRECTION: [strong, memorable close — make it screenshot-worthy]\nSTICKER/ELEMENT: [link sticker, DM button, or poll]\n\nCAPTION FOR STORY HIGHLIGHTS: [if saving to highlights, what to title it]\nHIGHLIGHT COVER IDEA: [simple icon/color for the highlight cover]\n\nPRO TIPS FOR THIS SEQUENCE:\n[3 quick tips for filming/designing these slides to maximize views and taps]`;
+  ot.p=p;
+  await generate(ot);
+}
 function openCarouselModal(){
   if(!selIds.size){alert('select some cards on the board first so ContentDrop knows what your carousel is about!');return;}
   document.getElementById('carousel-modal').style.display='flex';
@@ -1832,6 +1869,11 @@ function openModal(type){
     openCarouselModal();
     return;
   }
+  // ✨ IG Story uses its own flow
+  if(type==='story'){
+    openStoryModal();
+    return;
+  }
   curModal=type;const cfg=CFG[type]||CFG.note;
   const el=document.getElementById('m-title');el.textContent=`Add ${cfg.tag} Card`;el.style.setProperty('--m-col',cfg.a);
   const defs={youtube:'YouTube Video',url:'Website / Article',note:'New Note',brand:'Brand Reference',pdf:'PDF Document',image:'Image Reference',video:'TikTok / IG / Facebook Video'};
@@ -1920,6 +1962,14 @@ function buildGenList(){
           if(!selIds.size){showToast('select a card first, then generate 🎠','#cc2366');return;}
           openCarouselModal();
         };
+      } else if(ot.id==='story_gen'){
+        // ✨ IG Story in sidebar
+        btn.innerHTML=`<span>${ot.e}</span><span>${ot.l}</span><span style="font-size:9px;font-family:var(--mono);color:rgba(255,255,255,0.25);margin-left:auto;flex-shrink:0">pick slides</span>`;
+        btn.style.cssText+='border-color:rgba(245,158,11,0.2);';
+        btn.onclick=()=>{
+          if(!selIds.size){showToast('select a card first, then generate 📱','#f59e0b');return;}
+          openStoryModal();
+        };
       } else {
         btn.innerHTML=`<span>${ot.e}</span><span>${ot.l}</span>`;
         btn.onclick=()=>generate(ot);
@@ -1942,8 +1992,9 @@ async function generate(ot){
   const ctx=sel.map(c=>`[${(CFG[c.type]||CFG.note).tag}: ${c.title}]\n${c.content}`).join('\n\n---\n\n');
   const isEbook=ot.id==='ebook';
   const isCarousel=ot.id==='carousel_gen';
+  const isStory=ot.id==='story_gen';
   try{
-    const d=await callClaude({model:'claude-sonnet-4-20250514',max_tokens:(isEbook||isCarousel)?4000:2000,system:SYS,messages:[{role:'user',content:`Board content:\n\n${ctx}\n\n---\n\n${ot.p}`}]});
+    const d=await callClaude({model:'claude-sonnet-4-20250514',max_tokens:(isEbook||isCarousel||isStory)?4000:2000,system:SYS,messages:[{role:'user',content:`Board content:\n\n${ctx}\n\n---\n\n${ot.p}`}]});
     const text=d.content?.find(b=>b.type==='text')?.text||(d.error?.message||'generation failed — try again');
     curOut={ot,text};showDrawer(ot,text);
     const n=cards.length;addCard({type:'output',title:`${ot.e} ${ot.l}`,content:text,x:28+(n%4)*295,y:520,w:280});
