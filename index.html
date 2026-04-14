@@ -1326,7 +1326,7 @@ let apiKey=localStorage.getItem('cd_ak')||'';
 let supaKey=localStorage.getItem('cd_sk')||'';
 let cards=[],selIds=new Set(),savedItems=[];
 let drag=null,resize=null,pan=null,panOff={x:0,y:0},dragStartX=0,dragStartY=0;
-let editId=null,curModal=null,curOut=null,generating=false;
+let editId=null,curModal=null,curOut=null,generating=false,_pendingImg=null;
 let ebookPages=10;
 let carouselSlides=7; // ✨ NEW
 let storySlides=5;   // ✨ NEW
@@ -1663,9 +1663,10 @@ async function generateCarousel(){
 }
 
 // ── CARDS
-function addCard({type,title,content,x,y,w}){
+function addCard({type,title,content,x,y,w,img}){
   const id=uid();
   const c={id,type,title:title||'Untitled',content:content||'',x:x||80,y:y||80,w:w||260,sel:false};
+  if(img)c.img=img;
   cards.push(c);renderCard(c);updateStatus();saveState();return id;
 }
 
@@ -1677,7 +1678,7 @@ function renderCard(c){
   // handle gradient strip for carousel
   const stripStyle=cfg.strip.startsWith('linear')?`background:${cfg.strip}`:`background:${cfg.strip}`;
   el.style.cssText=`left:${c.x}px;top:${c.y}px;width:${c.w}px;--sel-col:${cfg.a};${c.sel?`box-shadow:0 0 0 2px ${cfg.a},0 4px 24px rgba(0,0,0,0.5);border-color:${cfg.a}`:''}`;
-  el.innerHTML=`<div class="card-strip" style="${stripStyle}"></div><div class="card-hdr"><span class="card-tag" style="background:${cfg.tBg};color:${cfg.tC}">${cfg.tag}</span><div class="card-acts"><button class="card-act" onclick="event.stopPropagation();startEdit('${c.id}',event)">edit</button><button class="card-del" onclick="event.stopPropagation();delCard('${c.id}',event)">×</button></div></div><div class="card-ttl-wrap"><div class="card-ttl" id="t-${c.id}">${esc(c.title)}</div></div><div class="card-body${c.content?'':' empty'}" id="b-${c.id}">${c.content?esc(c.content):'empty — click edit to add'}</div><div class="card-resize" onmousedown="event.stopPropagation();event.preventDefault();startResize(event,'${c.id}')"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M7 1L1 7M7 4L4 7" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/></svg></div>`;
+  el.innerHTML=`<div class="card-strip" style="${stripStyle}"></div><div class="card-hdr"><span class="card-tag" style="background:${cfg.tBg};color:${cfg.tC}">${cfg.tag}</span><div class="card-acts"><button class="card-act" onclick="event.stopPropagation();startEdit('${c.id}',event)">edit</button><button class="card-del" onclick="event.stopPropagation();delCard('${c.id}',event)">×</button></div></div><div class="card-ttl-wrap"><div class="card-ttl" id="t-${c.id}">${esc(c.title)}</div></div>${c.img?`<div id="ci-${c.id}" style="margin:0 10px 6px;border-radius:6px;overflow:hidden"><img src="${c.img}" style="width:100%;display:block;max-height:130px;object-fit:cover" onmousedown="event.stopPropagation()"/></div>`:''}<div class="card-body${c.content?'':' empty'}" id="b-${c.id}">${c.content?esc(c.content):'empty — click edit to add'}</div><div class="card-resize" onmousedown="event.stopPropagation();event.preventDefault();startResize(event,'${c.id}')"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M7 1L1 7M7 4L4 7" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/></svg></div>`;
   document.getElementById('board').appendChild(el);
 }
 
@@ -1888,7 +1889,7 @@ function openModal(type){
   if(type==='video')document.getElementById('video-sec').style.display='block';
   document.getElementById('yt-url').value='';document.getElementById('yt-st').textContent='';document.getElementById('yt-btn').disabled=true;
   document.getElementById('pdf-st').textContent='';document.getElementById('img-st').textContent='';
-  document.getElementById('img-dz-inner').innerHTML='<div class="dz-icon">🖼️</div><div class="dz-txt">Click to upload image</div><div class="dz-sub">AI will analyze it</div>';
+  document.getElementById('img-dz-inner').innerHTML='<div class="dz-icon">🖼️</div><div class="dz-txt">Click to upload image</div><div class="dz-sub">AI will analyze it</div>';_pendingImg=null;document.getElementById('img-file').value='';
   document.getElementById('card-modal').style.display='flex';
   setTimeout(()=>document.getElementById('m-card-title').focus(),50);
 }
@@ -1896,7 +1897,7 @@ function closeModal(){document.getElementById('card-modal').style.display='none'
 function confirmAdd(){
   const title=document.getElementById('m-card-title').value.trim()||'Untitled';
   const content=document.getElementById('m-card-content').value;
-  const n=cards.length;const col=n%3;const row=Math.floor(n/3);addCard({type:curModal,title,content,x:20+col*290,y:20+row*200,w:260});closeModal();
+  const n=cards.length;const col=n%3;const row=Math.floor(n/3);addCard({type:curModal,title,content,x:20+col*290,y:20+row*200,w:260,img:_pendingImg||undefined});_pendingImg=null;closeModal();
 }
 
 // ── YT TRANSCRIPT
@@ -1936,7 +1937,7 @@ async function handleImg(e){
   setSt('img-st','Analyzing...','#D4AF37');
   if(!apiKey){setSt('img-st','⚠ add API key first','#E8142A');return;}
   try{
-    const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{document.getElementById('img-dz-inner').innerHTML=`<img src="${fr.result}" style="width:100%;max-height:120px;object-fit:cover;display:block;border-radius:6px"/>`;res(fr.result.split(',')[1]);};fr.onerror=()=>rej(new Error('failed'));fr.readAsDataURL(file);});
+    const {b64,thumb}=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const dataUrl=fr.result;document.getElementById('img-dz-inner').innerHTML=`<img src="${dataUrl}" style="width:100%;max-height:120px;object-fit:cover;display:block;border-radius:6px"/>`;const img=new Image();img.onload=()=>{const cv=document.createElement('canvas');const maxW=280;const sc=Math.min(1,maxW/img.width);cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);res({b64:dataUrl.split(',')[1],thumb:cv.toDataURL('image/jpeg',0.5)});};img.onerror=()=>res({b64:dataUrl.split(',')[1],thumb:null});img.src=dataUrl;};fr.onerror=()=>rej(new Error('failed'));fr.readAsDataURL(file);});_pendingImg=thumb;
     const d=await callClaude({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},{type:'text',text:"Describe this image in detail for content creation. Include: what's shown, mood/aesthetic, colors, style, visible text, and how it could be used for social media or marketing."}]}]});
     document.getElementById('m-card-content').value=`IMAGE: ${file.name}\n\n--- AI ANALYSIS ---\n${d.content?.find(b=>b.type==='text')?.text||'could not analyze'}`;
     setSt('img-st','✓ analyzed','#22c55e');
