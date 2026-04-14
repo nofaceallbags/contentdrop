@@ -1542,7 +1542,7 @@ function loadState(){
   try{
     const raw=localStorage.getItem('cd_board');if(!raw)return false;
     const d=JSON.parse(raw);
-    if(d.cards&&d.cards.length){cards=d.cards;cards.forEach(c=>renderCard(c));const maxId=Math.max(0,...cards.map(c=>parseInt(c.id.slice(1))||0));if(maxId>_id)_id=maxId;}
+    if(d.cards&&d.cards.length){cards=d.cards;const maxId=Math.max(0,...cards.map(c=>parseInt(c.id.slice(1))||0));if(maxId>_id)_id=maxId;const seenIds=new Set();cards.forEach(c=>{if(seenIds.has(c.id))c.id=`c${++_id}`;seenIds.add(c.id);});cards.forEach(c=>renderCard(c));}
     if(d.savedItems){savedItems=d.savedItems;const maxSId=Math.max(0,...savedItems.map(i=>parseInt(i.id.slice(1))||0));if(maxSId>_id)_id=maxSId;}
     if(d.panOff){panOff=d.panOff;document.getElementById('board').style.transform=`translate(${panOff.x}px,${panOff.y}px)`;}
     return d.cards&&d.cards.length>0;
