@@ -750,6 +750,18 @@ button,input,textarea{font-family:var(--font)}
 .tbot-trade-pnl.pos{color:#22c55e}
 .tbot-trade-pnl.neg{color:var(--red3)}
 .tbot-no-trades{padding:18px;text-align:center;color:var(--white3);font-size:12px;font-family:var(--mono)}
+.tbot-toggle{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0}
+.tbot-toggle input{opacity:0;width:0;height:0}
+.tbot-toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:20px;cursor:pointer;transition:.25s}
+.tbot-toggle-slider::before{content:'';position:absolute;width:14px;height:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.25s}
+.tbot-toggle input:checked+.tbot-toggle-slider{background:#22c55e}
+.tbot-toggle input:checked+.tbot-toggle-slider::before{transform:translateX(16px)}
+.tbot-confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999}
+.tbot-confirm-box{background:#111113;border:1px solid rgba(232,20,42,0.3);border-radius:14px;padding:24px;max-width:380px;width:90%}
+.tbot-confirm-title{font-size:13px;font-weight:700;color:var(--red3);font-family:var(--mono);letter-spacing:.5px;margin-bottom:10px}
+.tbot-confirm-body{font-size:13px;color:rgba(255,255,255,0.75);line-height:1.7;margin-bottom:18px}
+.tbot-confirm-btns{display:flex;gap:8px}
+.tbot-confirm-btns button{flex:1;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
 </style>
 </head>
 <body>
@@ -1153,11 +1165,29 @@ button,input,textarea{font-family:var(--font)}
           <div class="tbot-row"><label>Slow MA</label><input class="tbot-input" id="cfg-ma-slow" type="number" value="21" min="10" max="50" onchange="botCfg.maSlow=+this.value;saveBotState();botCheckSignal()"></div>
         </div>
         <div class="tbot-row" style="margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)"><label>Risk/Trade %</label><input class="tbot-input" id="cfg-risk" type="number" value="10" min="1" max="50" onchange="botCfg.riskPct=+this.value;saveBotState()"></div>
+        <div class="tbot-row"><label>Stop-Loss %</label><input class="tbot-input" id="cfg-stoploss" type="number" value="3" min="0.5" max="20" step="0.5" onchange="botCfg.stopLossPct=+this.value;saveBotState()"></div>
+      </div>
+      <!-- Live mode card -->
+      <div class="tbot-card" id="live-mode-card">
+        <div class="tbot-card-title">Live Trading</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+          <span style="font-size:11px;color:var(--white3)">Live Mode</span>
+          <label class="tbot-toggle"><input type="checkbox" id="tbot-live-toggle" onchange="botToggleLiveMode(this.checked)"><span class="tbot-toggle-slider"></span></label>
+        </div>
+        <div id="live-mode-status" style="font-size:10px;font-family:var(--mono);color:rgba(255,255,255,0.25);margin-bottom:8px">paper trading active</div>
+        <div id="live-mode-fields" style="display:none">
+          <div style="font-size:10px;font-family:var(--mono);color:rgba(255,255,255,0.3);margin-bottom:6px">server: localhost:3001</div>
+          <button class="tbot-btn tbot-btn-stop" style="font-size:11px;padding:6px" onclick="botCheckServer()">Check Connection</button>
+          <div id="live-exchange-bal" style="margin-top:8px;font-size:10px;font-family:var(--mono);color:var(--white3);display:none">
+            <div style="color:rgba(255,255,255,0.2);margin-bottom:4px;letter-spacing:.5px">EXCHANGE BALANCE</div>
+            <div id="live-bal-list"></div>
+          </div>
+        </div>
       </div>
       <div class="tbot-card">
         <div class="tbot-card-title">Controls</div>
         <button class="tbot-btn tbot-btn-start" id="tbot-start-btn" onclick="botToggle()">Start Bot</button>
-        <div style="font-size:9px;font-family:var(--mono);color:rgba(255,255,255,0.2);margin-top:5px;text-align:center">checks signals every 60s</div>
+        <div style="font-size:9px;font-family:var(--mono);color:rgba(255,255,255,0.2);margin-top:5px;text-align:center" id="tbot-tick-label">checks signals every 60s</div>
         <button class="tbot-btn tbot-btn-ai" onclick="botAskAI()">✦ AI Analysis</button>
         <button class="tbot-btn tbot-btn-reset" onclick="botResetPortfolio()">Reset Portfolio</button>
       </div>
@@ -2322,7 +2352,7 @@ function toB64(file){return new Promise((res,rej)=>{const fr=new FileReader();fr
 
 const BOT_COINS={bitcoin:'BTC',ethereum:'ETH',solana:'SOL',binancecoin:'BNB',ripple:'XRP',dogecoin:'DOGE'};
 
-let botCfg={strategy:'rsi',rsiPeriod:14,rsiOversold:30,rsiOverbought:70,maFast:9,maSlow:21,riskPct:10};
+let botCfg={strategy:'rsi',rsiPeriod:14,rsiOversold:30,rsiOverbought:70,maFast:9,maSlow:21,riskPct:10,stopLossPct:3};
 let botPortfolio={cash:10000,holdings:0,trades:[],startVal:10000};
 let botRunning=false,botTicker=null;
 let botOHLC=[],botCoin='bitcoin',botCoinSym='BTC',botTf='1';
@@ -2385,6 +2415,7 @@ function botApplyCfgUI(){
   safe('cfg-ma-fast',botCfg.maFast);
   safe('cfg-ma-slow',botCfg.maSlow);
   safe('cfg-risk',botCfg.riskPct);
+  safe('cfg-stoploss',botCfg.stopLossPct);
   botToggleStrategyCfg(botCfg.strategy);
 }
 function botToggleStrategyCfg(s){
@@ -2552,7 +2583,7 @@ function botRenderLog(){
     const pc=t.pnl!=null?(t.pnl>=0?'pos':'neg'):'';
     return `<div class="tbot-trade">
       <span style="color:rgba(255,255,255,0.35)">${dt}</span>
-      <span class="tbot-trade-side ${t.side}">${t.side.toUpperCase()}</span>
+      <span class="tbot-trade-side ${t.side}">${t.live?'⚡ ':' '}${t.side.toUpperCase()}</span>
       <span style="color:var(--white2)">${t.coin}</span>
       <span style="color:var(--white3)">$${t.price.toLocaleString()}</span>
       <span class="tbot-trade-pnl ${pc}">${pStr}</span>
@@ -2565,6 +2596,7 @@ function botUpdatePriceUI(price,change){
   if(pe)pe.textContent='$'+price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:price>10?2:6});
   if(ce){ce.textContent=`${change>=0?'+':''}${change.toFixed(2)}%`;ce.className=`tbot-change ${change>=0?'pos':'neg'}`;}
   botUpdatePortfolioUI();
+  if(botRunning)botCheckStopLoss(price);
 }
 function botResetPortfolio(){
   if(!confirm('Reset paper portfolio back to $10,000?'))return;
@@ -2598,8 +2630,13 @@ async function botTick(){
   await botFetchData();
   if(!botRunning)return;
   const{signal}=botGetSignal();
-  if(signal==='buy'&&!botInPosition&&botPortfolio.cash>10)botExecuteTrade('buy',botLastPrice);
-  else if(signal==='sell'&&botInPosition&&botPortfolio.holdings>0)botExecuteTrade('sell',botLastPrice);
+  if(botLiveMode){
+    if(signal==='buy'&&!botInPosition&&botPortfolio.cash>10)await botExecuteLiveTrade('buy',botLastPrice);
+    else if(signal==='sell'&&botInPosition&&botPortfolio.holdings>0)await botExecuteLiveTrade('sell',botLastPrice);
+  }else{
+    if(signal==='buy'&&!botInPosition&&botPortfolio.cash>10)botExecuteTrade('buy',botLastPrice);
+    else if(signal==='sell'&&botInPosition&&botPortfolio.holdings>0)botExecuteTrade('sell',botLastPrice);
+  }
 }
 
 // ── Chart drawing
@@ -2715,6 +2752,181 @@ function botDrawRSI(){
   if(cur!=null){
     ctx.fillStyle='#f59e0b';ctx.font='9px monospace';ctx.textAlign='left';
     ctx.fillText(cur.toFixed(1),W-PR+3,yS(cur)+3);
+  }
+}
+
+// ── Live Trading Mode ────────────────────────────────────────────────────────
+
+let botLiveMode = false;
+const BOT_SERVER = 'http://127.0.0.1:3001';
+
+// Binance symbol lookup
+const BINANCE_SYMBOLS = {
+  bitcoin:'BTCUSDT',ethereum:'ETHUSDT',solana:'SOLUSDT',
+  binancecoin:'BNBUSDT',ripple:'XRPUSDT',dogecoin:'DOGEUSDT'
+};
+
+async function botServerFetch(path, opts = {}) {
+  const res = await fetch(BOT_SERVER + path, opts);
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || 'Server error');
+  return json;
+}
+
+async function botToggleLiveMode(enabled) {
+  if (enabled) {
+    const ok = await botCheckServer(true);
+    if (!ok) {
+      document.getElementById('tbot-live-toggle').checked = false;
+      return;
+    }
+    botLiveMode = true;
+    document.getElementById('live-mode-fields').style.display = '';
+    document.getElementById('live-mode-status').textContent = '⚡ LIVE — real orders on Binance';
+    document.getElementById('live-mode-status').style.color = '#22c55e';
+    const badge = document.getElementById('tbot-status-badge');
+    if (badge) { badge.innerHTML = '<span class="tbot-badge-dot"></span>LIVE'; badge.className = 'tbot-badge live'; }
+    botLoadExchangeBalance();
+    showToast('Live mode ON — trades will use real money', '#E8142A');
+  } else {
+    botLiveMode = false;
+    document.getElementById('live-mode-fields').style.display = 'none';
+    document.getElementById('live-mode-status').textContent = 'paper trading active';
+    document.getElementById('live-mode-status').style.color = '';
+    const badge = document.getElementById('tbot-status-badge');
+    if (badge) { badge.innerHTML = '<span class="tbot-badge-dot"></span>PAPER'; badge.className = 'tbot-badge'; }
+    showToast('Switched to paper trading', '#D4AF37');
+  }
+}
+
+async function botCheckServer(silent = false) {
+  try {
+    const data = await botServerFetch('/api/health');
+    const msg = data.keysLoaded
+      ? `Server OK · Binance keys loaded · Daily loss: $${data.dailyLoss.toFixed(2)}/$${data.maxDailyLoss}`
+      : 'Server running but no API keys found — edit your .env file';
+    if (!silent) showToast(msg, data.keysLoaded ? '#22c55e' : '#E8142A');
+    if (!data.keysLoaded && !silent) return false;
+    document.getElementById('live-mode-fields').style.display = '';
+    return true;
+  } catch (e) {
+    showToast('Cannot reach server at localhost:3001 — run: node server.js', '#E8142A');
+    return false;
+  }
+}
+
+async function botLoadExchangeBalance() {
+  try {
+    const data = await botServerFetch('/api/balance');
+    const wrap = document.getElementById('live-exchange-bal');
+    const list = document.getElementById('live-bal-list');
+    if (!wrap || !list) return;
+    wrap.style.display = '';
+    const relevantAssets = ['USDT', 'BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'DOGE'];
+    const filtered = data.balances.filter(b => relevantAssets.includes(b.asset) || b.free > 0.001);
+    list.innerHTML = filtered.map(b =>
+      `<div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="color:rgba(255,255,255,0.5)">${b.asset}</span>
+        <span style="color:var(--white2)">${b.free.toFixed(b.asset==='USDT'?2:6)}</span>
+      </div>`
+    ).join('') || '<div style="color:rgba(255,255,255,0.25)">no balances found</div>';
+  } catch (e) {
+    showToast('Balance fetch failed: ' + e.message, '#E8142A');
+  }
+}
+
+// Confirm dialog before real trade
+function botConfirmLiveTrade(side, coin, usdAmt, price) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'tbot-confirm-overlay';
+    const sideColor = side === 'BUY' ? '#22c55e' : '#E8142A';
+    overlay.innerHTML = `<div class="tbot-confirm-box">
+      <div class="tbot-confirm-title">⚡ REAL MONEY TRADE</div>
+      <div class="tbot-confirm-body">
+        <strong style="color:${sideColor}">${side} ${coin}</strong><br>
+        Amount: <strong style="color:#fff">$${usdAmt.toFixed(2)} USDT</strong><br>
+        Price: ~<strong style="color:#fff">$${price.toLocaleString()}</strong><br><br>
+        <span style="color:rgba(255,255,255,0.4);font-size:12px">This will execute a real market order on Binance. Slippage may apply.</span>
+      </div>
+      <div class="tbot-confirm-btns">
+        <button style="background:rgba(255,255,255,0.07);color:var(--white3)" onclick="this.closest('.tbot-confirm-overlay').remove();resolve_confirm(false)">Cancel</button>
+        <button style="background:${sideColor};color:#fff" onclick="this.closest('.tbot-confirm-overlay').remove();resolve_confirm(true)">${side} NOW</button>
+      </div>
+    </div>`;
+    // Use a one-time global resolver
+    window.resolve_confirm = resolve;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) { overlay.remove(); resolve(false); } });
+  });
+}
+
+// Live order execution (called instead of paper trade when live mode is on)
+async function botExecuteLiveTrade(side, price) {
+  const tradeUSD = (side === 'BUY')
+    ? botPortfolio.cash * (botCfg.riskPct / 100)
+    : botPortfolio.holdings * price;
+
+  const confirmed = await botConfirmLiveTrade(side.toUpperCase(), botCoinSym, tradeUSD, price);
+  if (!confirmed) return;
+
+  try {
+    let body;
+    if (side === 'buy') {
+      body = { coinId: botCoin, side: 'BUY', quoteQty: tradeUSD.toFixed(2) };
+    } else {
+      body = { coinId: botCoin, side: 'SELL', qty: botPortfolio.holdings };
+    }
+
+    const result = await botServerFetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const fills = result.fills || [];
+    const avgPrice = fills.length
+      ? fills.reduce((s, f) => s + f.price * f.qty, 0) / fills.reduce((s, f) => s + f.qty, 0)
+      : price;
+    const execQty  = result.executedQty;
+    const execUSD  = result.cummulativeQuoteQty;
+
+    // Mirror into paper portfolio so P&L tracking stays intact
+    if (side === 'buy') {
+      botPortfolio.cash -= execUSD;
+      botPortfolio.holdings += execQty;
+      botInPosition = true;
+      botEntryPrice = avgPrice;
+      botPortfolio.trades.unshift({ ts: Date.now(), side: 'buy', coin: botCoinSym, price: avgPrice, qty: execQty, pnl: null, live: true });
+    } else {
+      const pnl = execUSD - (execQty * botEntryPrice);
+      botPortfolio.cash += execUSD;
+      botPortfolio.holdings = 0;
+      botInPosition = false;
+      botPortfolio.trades.unshift({ ts: Date.now(), side: 'sell', coin: botCoinSym, price: avgPrice, qty: execQty, pnl, live: true });
+    }
+
+    saveBotState();
+    botUpdatePortfolioUI();
+    botRenderLog();
+    botLoadExchangeBalance();
+    showToast(`LIVE ${side.toUpperCase()} ${botCoinSym} @ $${avgPrice.toFixed(2)} · ${execQty.toFixed(6)} filled`, side === 'buy' ? '#22c55e' : '#E8142A');
+  } catch (e) {
+    showToast('Live order FAILED: ' + e.message, '#E8142A');
+  }
+}
+
+// Stop-loss watcher — runs on every price update in live mode
+function botCheckStopLoss(currentPrice) {
+  if (!botInPosition || !botCfg.stopLossPct || !botEntryPrice) return;
+  const drop = ((botEntryPrice - currentPrice) / botEntryPrice) * 100;
+  if (drop >= botCfg.stopLossPct) {
+    showToast(`Stop-loss triggered! ${drop.toFixed(2)}% drop from entry`, '#E8142A');
+    if (botLiveMode) {
+      botExecuteLiveTrade('sell', currentPrice);
+    } else {
+      botExecuteTrade('sell', currentPrice);
+    }
   }
 }
 
