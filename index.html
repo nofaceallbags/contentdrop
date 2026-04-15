@@ -676,6 +676,80 @@ button,input,textarea{font-family:var(--font)}
   .ws-chip{font-size:10px;padding:3px 7px}
   .hero-stats{flex-wrap:wrap;gap:16px}
 }
+
+/* ═══════════════════════════════════════════
+   TRADING BOT PAGE
+═══════════════════════════════════════════ */
+#trading{
+  position:fixed;inset:0;
+  transition:transform 0.7s cubic-bezier(0.76,0,0.24,1),opacity 0.7s ease;
+  background:var(--black);z-index:5;
+  transform:translateY(100vh);opacity:0;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#trading.enter{transform:translateY(0);opacity:1;z-index:20}
+.tbot-paper-banner{background:rgba(212,175,55,0.08);border-bottom:1px solid rgba(212,175,55,0.15);padding:4px 12px;font-size:10px;font-family:var(--mono);color:rgba(212,175,55,0.7);text-align:center;letter-spacing:.3px;flex-shrink:0}
+.tbot-hdr{height:51px;background:var(--black2);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;padding:0 12px;gap:10px;flex-shrink:0}
+.tbot-back{background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--white3);font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;transition:all .2s;font-family:var(--font)}
+.tbot-back:hover{border-color:rgba(255,255,255,0.3);color:var(--white)}
+.tbot-title{font-size:14px;font-weight:600;color:var(--white)}
+.tbot-coin-sel,.tbot-tf-sel{background:var(--black3);border:1px solid rgba(255,255,255,0.1);color:var(--white);font-size:12px;padding:5px 8px;border-radius:6px;cursor:pointer;font-family:var(--mono)}
+.tbot-live-price{margin-left:auto;font-size:18px;font-weight:700;color:var(--white);font-family:var(--mono)}
+.tbot-change{font-size:12px;font-weight:600;font-family:var(--mono);padding:3px 8px;border-radius:4px}
+.tbot-change.pos{background:rgba(34,197,94,0.15);color:#22c55e}
+.tbot-change.neg{background:rgba(232,20,42,0.15);color:var(--red3)}
+.tbot-badge{display:inline-flex;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--white3);font-size:10px;font-weight:600;font-family:var(--mono);padding:3px 8px;border-radius:12px;letter-spacing:.5px}
+.tbot-badge.live{background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.3);color:#22c55e}
+.tbot-badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;margin-right:5px;animation:pulse 1.5s ease infinite}
+.tbot-main{display:flex;flex:1;overflow:hidden}
+.tbot-sidebar{width:210px;flex-shrink:0;background:var(--black2);border-right:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;overflow-y:auto;padding:10px;gap:8px}
+.tbot-card{background:var(--black3);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:11px}
+.tbot-card-title{font-size:9px;font-weight:700;color:var(--white3);letter-spacing:1px;text-transform:uppercase;margin-bottom:9px;font-family:var(--mono)}
+.tbot-stat{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.tbot-stat:last-child{margin-bottom:0}
+.tbot-stat-label{font-size:11px;color:var(--white3)}
+.tbot-stat-val{font-size:12px;font-weight:600;color:var(--white);font-family:var(--mono)}
+.tbot-stat-val.green{color:#22c55e}
+.tbot-stat-val.red{color:var(--red3)}
+.tbot-stat-val.gold{color:var(--gold)}
+.tbot-signal{text-align:center;padding:9px;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--mono);letter-spacing:.5px;border:1px solid}
+.tbot-signal.buy{background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#22c55e}
+.tbot-signal.sell{background:rgba(232,20,42,0.1);border-color:rgba(232,20,42,0.3);color:var(--red3)}
+.tbot-signal.hold{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:var(--white3)}
+.tbot-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.tbot-row:last-child{margin-bottom:0}
+.tbot-row label{font-size:11px;color:var(--white3)}
+.tbot-input{background:var(--black4);border:1px solid rgba(255,255,255,0.08);color:var(--white);font-size:12px;padding:3px 7px;border-radius:5px;width:56px;font-family:var(--mono);text-align:right}
+.tbot-input:focus{outline:none;border-color:rgba(232,20,42,0.4)}
+.tbot-select{background:var(--black4);border:1px solid rgba(255,255,255,0.08);color:var(--white);font-size:12px;padding:4px 7px;border-radius:5px;font-family:var(--mono);width:100%}
+.tbot-select:focus{outline:none}
+.tbot-btn{width:100%;border:none;font-size:12px;font-weight:600;padding:9px;border-radius:8px;cursor:pointer;transition:all .2s;font-family:var(--font);margin-top:5px}
+.tbot-btn:first-of-type{margin-top:0}
+.tbot-btn-start{background:var(--red);color:#fff}
+.tbot-btn-start:hover{background:var(--red3)}
+.tbot-btn-stop{background:rgba(255,255,255,0.07);color:var(--white);border:1px solid rgba(255,255,255,0.1)}
+.tbot-btn-stop:hover{background:rgba(255,255,255,0.12)}
+.tbot-btn-ai{background:rgba(212,175,55,0.1);color:var(--gold);border:1px solid rgba(212,175,55,0.2)}
+.tbot-btn-ai:hover{background:rgba(212,175,55,0.18)}
+.tbot-btn-reset{background:transparent;color:var(--white3);border:1px solid rgba(255,255,255,0.07);font-size:11px}
+.tbot-btn-reset:hover{color:var(--white);border-color:rgba(255,255,255,0.18)}
+.tbot-chart-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.tbot-chart-area{flex:1;position:relative;min-height:0}
+#tbot-chart{display:block;width:100%;height:100%}
+.tbot-rsi-area{height:90px;position:relative;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0}
+#tbot-rsi-chart{display:block;width:100%;height:100%}
+.tbot-chart-label{position:absolute;top:5px;left:8px;font-size:10px;font-family:var(--mono);color:rgba(255,255,255,0.3);pointer-events:none;z-index:1}
+.tbot-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-family:var(--mono);color:var(--white3);background:var(--black)}
+.tbot-log{height:130px;flex-shrink:0;border-top:1px solid rgba(255,255,255,0.06);overflow-y:auto;background:var(--black2)}
+.tbot-log-hdr{display:flex;align-items:center;justify-content:space-between;padding:5px 12px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:10px;font-weight:700;color:var(--white3);letter-spacing:.8px;font-family:var(--mono);text-transform:uppercase;position:sticky;top:0;background:var(--black2);z-index:1}
+.tbot-trade{display:grid;grid-template-columns:80px 50px 60px 90px 75px;gap:8px;padding:4px 12px;font-size:11px;font-family:var(--mono);border-bottom:1px solid rgba(255,255,255,0.02);align-items:center}
+.tbot-trade:hover{background:rgba(255,255,255,0.02)}
+.tbot-trade-side{font-weight:700;font-size:10px;padding:2px 6px;border-radius:3px;text-align:center;display:inline-block}
+.tbot-trade-side.buy{background:rgba(34,197,94,0.15);color:#22c55e}
+.tbot-trade-side.sell{background:rgba(232,20,42,0.15);color:var(--red3)}
+.tbot-trade-pnl.pos{color:#22c55e}
+.tbot-trade-pnl.neg{color:var(--red3)}
+.tbot-no-trades{padding:18px;text-align:center;color:var(--white3);font-size:12px;font-family:var(--mono)}
 </style>
 </head>
 <body>
@@ -697,6 +771,7 @@ button,input,textarea{font-family:var(--font)}
     <button class="nav-link" onclick="scrollToFeatures()">Features</button>
     <button class="nav-link" onclick="scrollToHow()">How it works</button>
     <button class="nav-link" onclick="scrollToPricing()">Pricing</button>
+    <button class="nav-link" onclick="openTrading()" style="color:#22c55e;border:1px solid rgba(34,197,94,0.25);border-radius:6px;padding:6px 12px">📈 Trading Bot</button>
     <button class="nav-cta" onclick="enterWorkspace()">Open Workspace →</button>
   </div>
 </nav>
@@ -981,6 +1056,7 @@ button,input,textarea{font-family:var(--font)}
       </div>
       <button class="ws-icon-btn" onclick="openGuide()">📖 How to use</button>
       <button class="ws-icon-btn" onclick="openSettings()">⚙ Settings</button>
+      <button class="ws-icon-btn" onclick="openTrading()" style="color:#22c55e;border-color:rgba(34,197,94,0.25)">📈 Bot</button>
       <button class="back-btn" onclick="exitWorkspace()">← Home</button>
     </div>
   </div>
@@ -1018,6 +1094,97 @@ button,input,textarea{font-family:var(--font)}
     <div class="d-body" id="d-body"></div>
   </div>
 </div><!-- /workspace -->
+
+<!-- ═══ TRADING BOT PAGE ═══ -->
+<div id="trading">
+  <div class="tbot-paper-banner">⚠ PAPER TRADING MODE — all trades are simulated with virtual money. not financial advice.</div>
+  <div class="tbot-hdr">
+    <button class="tbot-back" onclick="exitTrading()">← Back</button>
+    <div class="tbot-title">Trading Bot</div>
+    <select class="tbot-coin-sel" id="tbot-coin" onchange="botChangeCoin(this.value)">
+      <option value="bitcoin">BTC</option>
+      <option value="ethereum">ETH</option>
+      <option value="solana">SOL</option>
+      <option value="binancecoin">BNB</option>
+      <option value="ripple">XRP</option>
+      <option value="dogecoin">DOGE</option>
+    </select>
+    <select class="tbot-tf-sel" id="tbot-tf" onchange="botChangeTf(this.value)">
+      <option value="1">24h candles</option>
+      <option value="7">7-day candles</option>
+      <option value="30">30-day candles</option>
+    </select>
+    <span class="tbot-badge" id="tbot-status-badge"><span class="tbot-badge-dot"></span>PAPER</span>
+    <span class="tbot-live-price" id="tbot-price">--</span>
+    <span class="tbot-change hold" id="tbot-change">--</span>
+  </div>
+  <div class="tbot-main">
+    <!-- Sidebar -->
+    <div class="tbot-sidebar">
+      <div class="tbot-card">
+        <div class="tbot-card-title">Portfolio</div>
+        <div class="tbot-stat"><span class="tbot-stat-label">Cash</span><span class="tbot-stat-val" id="tbot-cash">$10,000.00</span></div>
+        <div class="tbot-stat"><span class="tbot-stat-label">Holdings</span><span class="tbot-stat-val gold" id="tbot-holdings">0.000000</span></div>
+        <div class="tbot-stat"><span class="tbot-stat-label">Total</span><span class="tbot-stat-val" id="tbot-total">$10,000.00</span></div>
+        <div class="tbot-stat"><span class="tbot-stat-label">P&amp;L</span><span class="tbot-stat-val" id="tbot-pnl">$0.00</span></div>
+        <div class="tbot-stat"><span class="tbot-stat-label">Trades</span><span class="tbot-stat-val" id="tbot-ntrades">0</span></div>
+      </div>
+      <div class="tbot-card">
+        <div class="tbot-card-title">Signal</div>
+        <div class="tbot-signal hold" id="tbot-signal">ANALYZING...</div>
+        <div style="margin-top:7px;font-size:10px;font-family:var(--mono);color:var(--white3);text-align:center;line-height:1.5" id="tbot-signal-reason">waiting for data</div>
+      </div>
+      <div class="tbot-card">
+        <div class="tbot-card-title">Strategy</div>
+        <div style="margin-bottom:9px">
+          <select class="tbot-select" id="tbot-strat" onchange="botCfg.strategy=this.value;botToggleStrategyCfg(this.value);saveBotState();botCheckSignal()">
+            <option value="rsi">RSI</option>
+            <option value="ma">MA Crossover</option>
+            <option value="combined">RSI + MA</option>
+          </select>
+        </div>
+        <div id="rsi-cfg">
+          <div class="tbot-row"><label>RSI Period</label><input class="tbot-input" id="cfg-rsi-period" type="number" value="14" min="5" max="30" onchange="botCfg.rsiPeriod=+this.value;saveBotState();botCheckSignal()"></div>
+          <div class="tbot-row"><label>Oversold</label><input class="tbot-input" id="cfg-rsi-os" type="number" value="30" min="10" max="45" onchange="botCfg.rsiOversold=+this.value;saveBotState();botCheckSignal()"></div>
+          <div class="tbot-row"><label>Overbought</label><input class="tbot-input" id="cfg-rsi-ob" type="number" value="70" min="55" max="90" onchange="botCfg.rsiOverbought=+this.value;saveBotState();botCheckSignal()"></div>
+        </div>
+        <div id="ma-cfg" style="display:none">
+          <div class="tbot-row"><label>Fast MA</label><input class="tbot-input" id="cfg-ma-fast" type="number" value="9" min="3" max="20" onchange="botCfg.maFast=+this.value;saveBotState();botCheckSignal()"></div>
+          <div class="tbot-row"><label>Slow MA</label><input class="tbot-input" id="cfg-ma-slow" type="number" value="21" min="10" max="50" onchange="botCfg.maSlow=+this.value;saveBotState();botCheckSignal()"></div>
+        </div>
+        <div class="tbot-row" style="margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)"><label>Risk/Trade %</label><input class="tbot-input" id="cfg-risk" type="number" value="10" min="1" max="50" onchange="botCfg.riskPct=+this.value;saveBotState()"></div>
+      </div>
+      <div class="tbot-card">
+        <div class="tbot-card-title">Controls</div>
+        <button class="tbot-btn tbot-btn-start" id="tbot-start-btn" onclick="botToggle()">Start Bot</button>
+        <div style="font-size:9px;font-family:var(--mono);color:rgba(255,255,255,0.2);margin-top:5px;text-align:center">checks signals every 60s</div>
+        <button class="tbot-btn tbot-btn-ai" onclick="botAskAI()">✦ AI Analysis</button>
+        <button class="tbot-btn tbot-btn-reset" onclick="botResetPortfolio()">Reset Portfolio</button>
+      </div>
+    </div>
+    <!-- Chart -->
+    <div class="tbot-chart-wrap">
+      <div class="tbot-chart-area" id="tbot-chart-area">
+        <canvas id="tbot-chart"></canvas>
+        <div class="tbot-chart-label" id="tbot-chart-lbl">Price + MA</div>
+        <div class="tbot-loading" id="tbot-loading">Loading chart data...</div>
+      </div>
+      <div class="tbot-rsi-area">
+        <canvas id="tbot-rsi-chart"></canvas>
+        <div class="tbot-chart-label">RSI</div>
+      </div>
+    </div>
+  </div>
+  <div class="tbot-log">
+    <div class="tbot-log-hdr">
+      <span>Trade Log</span>
+      <span style="font-weight:400;color:rgba(255,255,255,0.2)" id="tbot-log-count">0 trades</span>
+    </div>
+    <div id="tbot-log-body">
+      <div class="tbot-no-trades">no trades yet — start the bot to auto-trade or use the signal manually</div>
+    </div>
+  </div>
+</div><!-- /trading -->
 
 <!-- Modals -->
 <div class="overlay" id="ebook-modal" onclick="if(event.target===this)closeEbookModal()">
@@ -2148,6 +2315,454 @@ async function sendHelpMsg(q){
 }
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function toB64(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(',')[1]);fr.onerror=()=>rej(new Error('failed'));fr.readAsDataURL(file);});}
+
+// ═══════════════════════════════════════════
+// TRADING BOT ENGINE
+// ═══════════════════════════════════════════
+
+const BOT_COINS={bitcoin:'BTC',ethereum:'ETH',solana:'SOL',binancecoin:'BNB',ripple:'XRP',dogecoin:'DOGE'};
+
+let botCfg={strategy:'rsi',rsiPeriod:14,rsiOversold:30,rsiOverbought:70,maFast:9,maSlow:21,riskPct:10};
+let botPortfolio={cash:10000,holdings:0,trades:[],startVal:10000};
+let botRunning=false,botTicker=null;
+let botOHLC=[],botCoin='bitcoin',botCoinSym='BTC',botTf='1';
+let botLastPrice=0,botRSIData=[],botMAFastData=[],botMASlowData=[];
+let botInPosition=false,botEntryPrice=0,botSignalCur='hold';
+
+// ── Navigation
+function openTrading(){
+  const tbot=document.getElementById('trading');
+  const home=document.getElementById('home');
+  const ws=document.getElementById('workspace');
+  ws.classList.remove('enter');
+  home.classList.add('exit');
+  tbot.classList.add('enter');
+  botLoadState();
+  botFetchData();
+}
+function exitTrading(){
+  document.getElementById('trading').classList.remove('enter');
+  document.getElementById('home').classList.remove('exit');
+  botStop();
+}
+
+// ── Coin / Timeframe changes
+function botChangeCoin(val){
+  botCoin=val;botCoinSym=BOT_COINS[val]||val.toUpperCase();
+  botOHLC=[];botFetchData();saveBotState();
+}
+function botChangeTf(val){botTf=val;botFetchData();}
+
+// ── Persistence
+function saveBotState(){
+  localStorage.setItem('cd_bot_cfg',JSON.stringify(botCfg));
+  localStorage.setItem('cd_bot_port',JSON.stringify(botPortfolio));
+  localStorage.setItem('cd_bot_coin',botCoin);
+  localStorage.setItem('cd_bot_tf',botTf);
+}
+function botLoadState(){
+  try{
+    const c=localStorage.getItem('cd_bot_cfg');
+    const p=localStorage.getItem('cd_bot_port');
+    const coin=localStorage.getItem('cd_bot_coin');
+    const tf=localStorage.getItem('cd_bot_tf');
+    if(c)botCfg=Object.assign(botCfg,JSON.parse(c));
+    if(p)botPortfolio=JSON.parse(p);
+    if(coin){botCoin=coin;botCoinSym=BOT_COINS[coin]||coin;
+      const sel=document.getElementById('tbot-coin');if(sel)sel.value=coin;}
+    if(tf){botTf=tf;const sel=document.getElementById('tbot-tf');if(sel)sel.value=tf;}
+  }catch(e){}
+  botApplyCfgUI();
+  botUpdatePortfolioUI();
+  botRenderLog();
+}
+function botApplyCfgUI(){
+  const safe=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val;};
+  safe('tbot-strat',botCfg.strategy);
+  safe('cfg-rsi-period',botCfg.rsiPeriod);
+  safe('cfg-rsi-os',botCfg.rsiOversold);
+  safe('cfg-rsi-ob',botCfg.rsiOverbought);
+  safe('cfg-ma-fast',botCfg.maFast);
+  safe('cfg-ma-slow',botCfg.maSlow);
+  safe('cfg-risk',botCfg.riskPct);
+  botToggleStrategyCfg(botCfg.strategy);
+}
+function botToggleStrategyCfg(s){
+  const rsiEl=document.getElementById('rsi-cfg');
+  const maEl=document.getElementById('ma-cfg');
+  if(rsiEl)rsiEl.style.display=(s==='rsi'||s==='combined')?'':'none';
+  if(maEl)maEl.style.display=(s==='ma'||s==='combined')?'':'none';
+}
+
+// ── Data fetching
+async function botFetchData(){
+  const loading=document.getElementById('tbot-loading');
+  if(loading){loading.textContent='Loading chart data...';loading.style.display='flex';}
+  try{
+    const [ohlcRes,priceRes]=await Promise.all([
+      fetch(`https://api.coingecko.com/api/v3/coins/${botCoin}/ohlc?vs_currency=usd&days=${botTf}`),
+      fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${botCoin}&vs_currencies=usd&include_24hr_change=true`)
+    ]);
+    if(ohlcRes.ok){const d=await ohlcRes.json();if(Array.isArray(d)&&d.length)botOHLC=d;}
+    if(priceRes.ok){
+      const d=await priceRes.json();
+      botLastPrice=d[botCoin]?.usd||0;
+      const ch=d[botCoin]?.usd_24h_change||0;
+      botUpdatePriceUI(botLastPrice,ch);
+    }
+    if(loading)loading.style.display='none';
+    botCalcIndicators();
+    botDrawChart();
+    botCheckSignal();
+  }catch(e){
+    if(loading){loading.textContent='Failed to load — check your connection';loading.style.display='flex';}
+  }
+}
+
+// ── Indicators
+function botCalcRSI(closes,period){
+  if(closes.length<period+1)return[];
+  const rsi=[];let gains=0,losses=0;
+  for(let i=1;i<=period;i++){const d=closes[i]-closes[i-1];if(d>=0)gains+=d;else losses-=d;}
+  let ag=gains/period,al=losses/period;
+  for(let i=period;i<closes.length;i++){
+    if(i>period){
+      const d=closes[i]-closes[i-1];
+      ag=(ag*(period-1)+(d>=0?d:0))/period;
+      al=(al*(period-1)+(d<0?-d:0))/period;
+    }
+    rsi.push(al===0?100:100-100/(1+ag/al));
+  }
+  return rsi;
+}
+function botCalcSMA(vals,period){
+  return vals.map((_,i)=>{
+    if(i<period-1)return null;
+    return vals.slice(i-period+1,i+1).reduce((a,b)=>a+b,0)/period;
+  });
+}
+function botCalcIndicators(){
+  if(!botOHLC.length)return;
+  const closes=botOHLC.map(c=>c[4]);
+  botRSIData=botCalcRSI(closes,botCfg.rsiPeriod);
+  botMAFastData=botCalcSMA(closes,botCfg.maFast);
+  botMASlowData=botCalcSMA(closes,botCfg.maSlow);
+}
+
+// ── Signal logic
+function botGetSignal(){
+  if(!botOHLC.length)return{signal:'hold',reason:'waiting for data'};
+  const rsi=botRSIData,fast=botMAFastData,slow=botMASlowData;
+  const curRSI=rsi[rsi.length-1],prevRSI=rsi[rsi.length-2];
+  const fastNow=fast[fast.length-1],fastPrev=fast[fast.length-2];
+  const slowNow=slow[slow.length-1],slowPrev=slow[slow.length-2];
+  const s=botCfg.strategy;
+  if(s==='rsi'){
+    if(curRSI<botCfg.rsiOversold)return{signal:'buy',reason:`RSI oversold: ${curRSI.toFixed(1)}`};
+    if(curRSI>botCfg.rsiOverbought)return{signal:'sell',reason:`RSI overbought: ${curRSI.toFixed(1)}`};
+    return{signal:'hold',reason:`RSI neutral: ${curRSI?.toFixed(1)||'--'}`};
+  }
+  if(s==='ma'){
+    if(fastNow&&slowNow&&fastPrev!=null&&slowPrev!=null){
+      const up=fastPrev<slowPrev&&fastNow>slowNow;
+      const dn=fastPrev>slowPrev&&fastNow<slowNow;
+      if(up)return{signal:'buy',reason:`MA${botCfg.maFast} crossed above MA${botCfg.maSlow}`};
+      if(dn)return{signal:'sell',reason:`MA${botCfg.maFast} crossed below MA${botCfg.maSlow}`};
+      if(fastNow>slowNow)return{signal:'buy',reason:`MA${botCfg.maFast} > MA${botCfg.maSlow} — uptrend`};
+      return{signal:'sell',reason:`MA${botCfg.maFast} < MA${botCfg.maSlow} — downtrend`};
+    }
+    return{signal:'hold',reason:'calculating MAs...'};
+  }
+  if(s==='combined'){
+    const rb=curRSI<botCfg.rsiOversold,rs=curRSI>botCfg.rsiOverbought;
+    const mu=fastNow>slowNow,md=fastNow<slowNow;
+    if(rb&&mu)return{signal:'buy',reason:`RSI oversold (${curRSI?.toFixed(1)}) + MA bullish`};
+    if(rs&&md)return{signal:'sell',reason:`RSI overbought (${curRSI?.toFixed(1)}) + MA bearish`};
+    if(rb)return{signal:'buy',reason:`RSI oversold: ${curRSI?.toFixed(1)}`};
+    if(rs)return{signal:'sell',reason:`RSI overbought: ${curRSI?.toFixed(1)}`};
+    return{signal:'hold',reason:`RSI: ${curRSI?.toFixed(1)||'--'} — no clear signal`};
+  }
+  return{signal:'hold',reason:'no strategy'};
+}
+function botCheckSignal(){
+  botCalcIndicators();
+  const{signal,reason}=botGetSignal();
+  botSignalCur=signal;
+  const el=document.getElementById('tbot-signal');
+  const re=document.getElementById('tbot-signal-reason');
+  if(el){el.textContent=signal.toUpperCase();el.className=`tbot-signal ${signal}`;}
+  if(re)re.textContent=reason;
+}
+
+// ── Paper trading
+function botExecuteTrade(side,price){
+  if(side==='buy'){
+    const tradeVal=botPortfolio.cash*(botCfg.riskPct/100);
+    if(tradeVal<1)return;
+    const qty=tradeVal/price;
+    botPortfolio.cash-=tradeVal;
+    botPortfolio.holdings+=qty;
+    botInPosition=true;botEntryPrice=price;
+    botPortfolio.trades.unshift({ts:Date.now(),side,coin:botCoinSym,price,qty,pnl:null});
+  }else if(side==='sell'){
+    if(botPortfolio.holdings<=0)return;
+    const qty=botPortfolio.holdings;
+    const proceeds=qty*price;
+    const pnl=proceeds-(qty*botEntryPrice);
+    botPortfolio.cash+=proceeds;
+    botPortfolio.holdings=0;
+    botInPosition=false;
+    botPortfolio.trades.unshift({ts:Date.now(),side,coin:botCoinSym,price,qty,pnl});
+  }
+  saveBotState();
+  botUpdatePortfolioUI();
+  botRenderLog();
+  showToast(`${side.toUpperCase()} ${botCoinSym} @ $${price.toLocaleString()}`,side==='buy'?'#22c55e':'#E8142A');
+}
+function botUpdatePortfolioUI(){
+  const total=botPortfolio.cash+botPortfolio.holdings*botLastPrice;
+  const pnl=total-botPortfolio.startVal;
+  const pct=((pnl/botPortfolio.startVal)*100).toFixed(2);
+  const fmt=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const s=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  s('tbot-cash',fmt(botPortfolio.cash));
+  s('tbot-holdings',`${botPortfolio.holdings.toFixed(6)} ${botCoinSym}`);
+  s('tbot-total',fmt(total));
+  s('tbot-ntrades',botPortfolio.trades.length);
+  const pe=document.getElementById('tbot-pnl');
+  if(pe){
+    pe.textContent=`${pnl>=0?'+':''}${fmt(pnl)} (${pnlPct(pnl,botPortfolio.startVal)}%)`;
+    pe.className=`tbot-stat-val ${pnl>=0?'green':'red'}`;
+  }
+}
+function pnlPct(pnl,start){return start?((pnl/start)*100).toFixed(2):'0.00';}
+function botRenderLog(){
+  const body=document.getElementById('tbot-log-body');
+  const cnt=document.getElementById('tbot-log-count');
+  if(!body)return;
+  if(cnt)cnt.textContent=`${botPortfolio.trades.length} trades`;
+  if(!botPortfolio.trades.length){
+    body.innerHTML='<div class="tbot-no-trades">no trades yet — start the bot to auto-trade on signals</div>';
+    return;
+  }
+  body.innerHTML=botPortfolio.trades.slice(0,60).map(t=>{
+    const d=new Date(t.ts);
+    const dt=d.toLocaleDateString([],{month:'short',day:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const pStr=t.pnl!=null?(t.pnl>=0?`+$${t.pnl.toFixed(2)}`:`-$${Math.abs(t.pnl).toFixed(2)}`):'--';
+    const pc=t.pnl!=null?(t.pnl>=0?'pos':'neg'):'';
+    return `<div class="tbot-trade">
+      <span style="color:rgba(255,255,255,0.35)">${dt}</span>
+      <span class="tbot-trade-side ${t.side}">${t.side.toUpperCase()}</span>
+      <span style="color:var(--white2)">${t.coin}</span>
+      <span style="color:var(--white3)">$${t.price.toLocaleString()}</span>
+      <span class="tbot-trade-pnl ${pc}">${pStr}</span>
+    </div>`;
+  }).join('');
+}
+function botUpdatePriceUI(price,change){
+  const pe=document.getElementById('tbot-price');
+  const ce=document.getElementById('tbot-change');
+  if(pe)pe.textContent='$'+price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:price>10?2:6});
+  if(ce){ce.textContent=`${change>=0?'+':''}${change.toFixed(2)}%`;ce.className=`tbot-change ${change>=0?'pos':'neg'}`;}
+  botUpdatePortfolioUI();
+}
+function botResetPortfolio(){
+  if(!confirm('Reset paper portfolio back to $10,000?'))return;
+  botPortfolio={cash:10000,holdings:0,trades:[],startVal:10000};
+  botInPosition=false;botEntryPrice=0;
+  saveBotState();botUpdatePortfolioUI();botRenderLog();
+  showToast('Portfolio reset to $10,000','#D4AF37');
+}
+
+// ── Bot engine
+function botToggle(){if(botRunning)botStop();else botStart();}
+function botStart(){
+  botRunning=true;
+  const btn=document.getElementById('tbot-start-btn');
+  if(btn){btn.textContent='Stop Bot';btn.className='tbot-btn tbot-btn-stop';}
+  const badge=document.getElementById('tbot-status-badge');
+  if(badge){badge.innerHTML='<span class="tbot-badge-dot"></span>LIVE';badge.className='tbot-badge live';}
+  botTicker=setInterval(botTick,60000);
+  botTick();
+  showToast('Bot started — monitoring signals','#22c55e');
+}
+function botStop(){
+  botRunning=false;
+  if(botTicker){clearInterval(botTicker);botTicker=null;}
+  const btn=document.getElementById('tbot-start-btn');
+  if(btn){btn.textContent='Start Bot';btn.className='tbot-btn tbot-btn-start';}
+  const badge=document.getElementById('tbot-status-badge');
+  if(badge){badge.innerHTML='<span class="tbot-badge-dot"></span>PAPER';badge.className='tbot-badge';}
+}
+async function botTick(){
+  await botFetchData();
+  if(!botRunning)return;
+  const{signal}=botGetSignal();
+  if(signal==='buy'&&!botInPosition&&botPortfolio.cash>10)botExecuteTrade('buy',botLastPrice);
+  else if(signal==='sell'&&botInPosition&&botPortfolio.holdings>0)botExecuteTrade('sell',botLastPrice);
+}
+
+// ── Chart drawing
+function botDrawChart(){
+  const canvas=document.getElementById('tbot-chart');
+  const area=document.getElementById('tbot-chart-area');
+  if(!canvas||!area||!botOHLC.length)return;
+  canvas.width=area.clientWidth;canvas.height=area.clientHeight;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  const PL=8,PR=56,PT=18,PB=16;
+  const CW=W-PL-PR,CH=H-PT-PB;
+  const n=botOHLC.length;
+  ctx.fillStyle='#080808';ctx.fillRect(0,0,W,H);
+  if(n<2)return;
+  let pMin=Infinity,pMax=-Infinity;
+  botOHLC.forEach(c=>{if(c[2]>pMax)pMax=c[2];if(c[3]<pMin)pMin=c[3];});
+  const pRange=pMax-pMin,pad=pRange*0.1;
+  pMin-=pad;pMax+=pad;
+  const xS=i=>PL+(i/(n-1))*CW;
+  const yS=p=>PT+CH-((p-pMin)/(pMax-pMin))*CH;
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=PT+(CH/4)*i;
+    ctx.beginPath();ctx.moveTo(PL,y);ctx.lineTo(W-PR,y);ctx.stroke();
+    const pv=pMax-((pMax-pMin)/4)*i;
+    ctx.fillStyle='rgba(255,255,255,0.22)';ctx.font='9px monospace';ctx.textAlign='left';
+    ctx.fillText('$'+pv.toLocaleString('en-US',{maximumFractionDigits:pv>100?0:4}),W-PR+3,y+4);
+  }
+  // candles
+  const cw=Math.max(2,(CW/n)*0.65);
+  botOHLC.forEach((c,i)=>{
+    const[,open,high,low,close]=c;
+    const x=xS(i);const green=close>=open;
+    ctx.strokeStyle=green?'#22c55e':'#E8142A';
+    ctx.fillStyle=green?'#22c55e':'#E8142A';
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x,yS(high));ctx.lineTo(x,yS(low));ctx.stroke();
+    const top=yS(Math.max(open,close));
+    const bh=Math.max(1,Math.abs(yS(open)-yS(close)));
+    ctx.globalAlpha=0.82;ctx.fillRect(x-cw/2,top,cw,bh);ctx.globalAlpha=1;
+  });
+  // fast MA
+  const drawLine=(data,color)=>{
+    ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();
+    let started=false;
+    data.forEach((v,i)=>{
+      if(v===null)return;
+      const x=xS(i),y=yS(v);
+      if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+  };
+  drawLine(botMAFastData,'#f59e0b');
+  drawLine(botMASlowData,'#8b5cf6');
+  // current price line
+  if(botLastPrice){
+    const y=yS(botLastPrice);
+    ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.setLineDash([4,4]);ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(PL,y);ctx.lineTo(W-PR,y);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  // legend
+  ctx.font='9px monospace';ctx.textAlign='right';
+  ctx.fillStyle='#f59e0b';ctx.fillText(`MA${botCfg.maFast}`,W-PR-2,PT+12);
+  ctx.fillStyle='#8b5cf6';ctx.fillText(`MA${botCfg.maSlow}`,W-PR-2,PT+24);
+  // chart label
+  const lbl=document.getElementById('tbot-chart-lbl');
+  if(lbl)lbl.textContent=`${botCoinSym} / USD · ${botTf==='1'?'24h':botTf==='7'?'7d':'30d'}`;
+  botDrawRSI();
+}
+function botDrawRSI(){
+  const canvas=document.getElementById('tbot-rsi-chart');
+  const area=document.querySelector('.tbot-rsi-area');
+  if(!canvas||!area||!botRSIData.length)return;
+  canvas.width=area.clientWidth;canvas.height=area.clientHeight;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  const PL=8,PR=56,PT=4,PB=4;
+  const CW=W-PL-PR,CH=H-PT-PB;
+  const n=botOHLC.length,rOff=n-botRSIData.length;
+  ctx.fillStyle='#080808';ctx.fillRect(0,0,W,H);
+  const xS=i=>PL+(i/(n-1))*CW;
+  const yS=v=>PT+CH-((v/100)*CH);
+  const osY=yS(botCfg.rsiOversold),obY=yS(botCfg.rsiOverbought);
+  // zones
+  ctx.fillStyle='rgba(34,197,94,0.05)';ctx.fillRect(PL,osY,CW,CH-osY+PT);
+  ctx.fillStyle='rgba(232,20,42,0.05)';ctx.fillRect(PL,PT,CW,obY-PT);
+  // lines
+  ctx.setLineDash([3,3]);ctx.lineWidth=1;
+  ctx.strokeStyle='rgba(34,197,94,0.35)';
+  ctx.beginPath();ctx.moveTo(PL,osY);ctx.lineTo(W-PR,osY);ctx.stroke();
+  ctx.strokeStyle='rgba(232,20,42,0.35)';
+  ctx.beginPath();ctx.moveTo(PL,obY);ctx.lineTo(W-PR,obY);ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,0.08)';
+  ctx.beginPath();ctx.moveTo(PL,yS(50));ctx.lineTo(W-PR,yS(50));ctx.stroke();
+  ctx.setLineDash([]);
+  // labels
+  ctx.font='9px monospace';ctx.textAlign='left';ctx.fillStyle='rgba(34,197,94,0.6)';
+  ctx.fillText(botCfg.rsiOversold,W-PR+3,osY+3);
+  ctx.fillStyle='rgba(232,20,42,0.6)';ctx.fillText(botCfg.rsiOverbought,W-PR+3,obY+3);
+  // RSI line
+  ctx.strokeStyle='#f59e0b';ctx.lineWidth=1.5;ctx.beginPath();
+  let started=false;
+  botRSIData.forEach((v,ri)=>{
+    const x=xS(ri+rOff),y=yS(v);
+    if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  // current value
+  const cur=botRSIData[botRSIData.length-1];
+  if(cur!=null){
+    ctx.fillStyle='#f59e0b';ctx.font='9px monospace';ctx.textAlign='left';
+    ctx.fillText(cur.toFixed(1),W-PR+3,yS(cur)+3);
+  }
+}
+
+// ── AI Analysis
+async function botAskAI(){
+  if(!apiKey){showToast('Add API key in Settings first','#E8142A');return;}
+  const cur=botRSIData[botRSIData.length-1];
+  const fn=botMAFastData[botMAFastData.length-1];
+  const sn=botMASlowData[botMASlowData.length-1];
+  const{signal,reason}=botGetSignal();
+  const recent=botOHLC.slice(-8).map(c=>`O:${c[1].toFixed(2)} H:${c[2].toFixed(2)} L:${c[3].toFixed(2)} C:${c[4].toFixed(2)}`).join('\n');
+  const prompt=`You are a crypto technical analyst. Analyze this market data concisely (3-4 sentences max):
+
+Coin: ${botCoinSym}/USD
+Price: $${botLastPrice.toLocaleString()}
+Timeframe: ${botTf==='1'?'24h':botTf==='7'?'7d':'30d'}
+RSI(${botCfg.rsiPeriod}): ${cur?.toFixed(2)||'N/A'}
+MA${botCfg.maFast}: $${fn?.toFixed(2)||'N/A'} | MA${botCfg.maSlow}: $${sn?.toFixed(2)||'N/A'}
+Signal: ${signal.toUpperCase()} — ${reason}
+
+Recent OHLC (last 8 candles):
+${recent}
+
+Paper portfolio: $${botPortfolio.cash.toFixed(0)} cash + ${botPortfolio.holdings.toFixed(4)} ${botCoinSym} holdings
+
+Give your read on current momentum, whether the signal looks valid, and one thing to watch. Be direct.`;
+  showToast('Asking Claude for analysis...','#D4AF37');
+  try{
+    const d=await callClaude({model:'claude-sonnet-4-6',max_tokens:280,messages:[{role:'user',content:prompt}]});
+    const txt=d.content?.find(b=>b.type==='text')?.text||'No analysis.';
+    botShowAnalysis(txt);
+  }catch(e){showToast('Analysis failed: '+e.message,'#E8142A');}
+}
+function botShowAnalysis(text){
+  let m=document.getElementById('tbot-ai-modal');
+  if(m)m.remove();
+  m=document.createElement('div');
+  m.id='tbot-ai-modal';
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:9999';
+  m.innerHTML=`<div style="background:#111113;border:1px solid rgba(212,175,55,0.25);border-radius:14px;padding:22px 24px;max-width:460px;width:90%;position:relative">
+    <div style="font-size:10px;font-weight:700;color:#D4AF37;letter-spacing:1px;font-family:monospace;margin-bottom:12px">✦ AI ANALYSIS — ${botCoinSym}/USD</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.82);line-height:1.75">${esc(text)}</div>
+    <button onclick="document.getElementById('tbot-ai-modal').remove()" style="position:absolute;top:12px;right:14px;background:transparent;border:none;color:rgba(255,255,255,0.35);font-size:20px;cursor:pointer;line-height:1">×</button>
+    <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,0.2);font-family:monospace">paper trading only · not financial advice</div>
+  </div>`;
+  m.onclick=e=>{if(e.target===m)m.remove();};
+  document.body.appendChild(m);
+}
 
 // ── INIT
 function init(){
